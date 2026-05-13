@@ -1,0 +1,74 @@
+﻿-----------
+schuss.initialisiere:
+			schuss.x = schiff.polygon.eckenArray[schiff.polygon.eckenArray.length - 1].koordinate.x + 
+				(schiff.polygon.eckenArray[schiff.polygon.eckenArray.length - 1].koordinate.x - schiff.s.x) / 
+				      schiff.polygon.eckenArray[schiff.polygon.eckenArray.length - 1].abstand;
+			schuss.y = schiff.polygon.eckenArray[schiff.polygon.eckenArray.length - 1].koordinate.y +
+				(schiff.polygon.eckenArray[schiff.polygon.eckenArray.length - 1].koordinate.y - schiff.s.y) /
+    				  schiff.polygon.eckenArray[schiff.polygon.eckenArray.length - 1].abstand;
+
+			schuss.v_x = schuss_speed * (schiff.polygon.eckenArray[schiff.polygon.eckenArray.length - 1].koordinate.x - schiff.s.x) / 
+										schiff.polygon.eckenArray[schiff.polygon.eckenArray.length - 1].abstand + schiff.v.x;
+			schuss.v_y = schuss_speed * (schiff.polygon.eckenArray[schiff.polygon.eckenArray.length - 1].koordinate.y - schiff.s.y) / 
+										schiff.polygon.eckenArray[schiff.polygon.eckenArray.length - 1].abstand + schiff.v.y;
+-----------
+polygon.berechneEckenKoordinaten:
+	schiff.eckenArray[i].koordinate.x = schiff.s.x + Math.cos(schiff.eckenArray[i].winkel + alpha) * schiff.eckenArray[i].abstand ;
+	schiff.eckenArray[i].koordinate.y = schiff.s.y + Math.sin(schiff.eckenArray[i].winkel + alpha) * schiff.eckenArray[i].abstand ;		
+//var richtung = Math.acos(Math.abs(abstand.x)/abstand_betrag);	
+-----------
+==>
+ABSTAND := schiff.eckenArray[schiff.polygon.eckenArray.length - 1].abstand
+
+schuss.x = schiff.s.x + Math.cos(schiff.eckenArray[schiff.polygon.eckenArray.length - 1].winkel + alpha) * ABSTAND +
+		    (schiff.s.x + Math.cos(schiff.eckenArray[schiff.polygon.eckenArray.length - 1].winkel + alpha) * ABSTAND - schiff.s.x) / ABSTAND					
+         = schiff.s.x + Math.cos(schiff.eckenArray[schiff.polygon.eckenArray.length - 1].winkel + alpha) * ABSTAND +
+			(schiff.s.x + Math.cos(schiff.eckenArray[schiff.polygon.eckenArray.length - 1].winkel + alpha) - schiff.s.x / ABSTAND	
+		 = schiff.s.x + Math.cos(schiff.eckenArray[schiff.polygon.eckenArray.length - 1].winkel + alpha) * (ABSTAND + 1) - schiff.s.x / ABSTAND
+		 = schiff.s.x * (1 - 1 / ABSTAND) + Math.cos((1/2)* Math.PI) + alpha) (ABSTAND + 1)
+schuss.x = schiff.s.x * (1 - 1 / ABSTAND) + Math.sin(- alpha) * (ABSTAND + 1)
+		 
+		 
+schuss.y = schiff.s.y * (1 - 1 / ABSTAND) + Math.cos(- alpha) * (ABSTAND + 1)
+
+----------------------------------------------------------------------------------------------------------------
+Schnittpunkt der Vektoren:
+----------------------------------------------------------------------------------------------------------------
+(I) schuss.x + t*schuss_v.x = fremdraumschiff.x + t*fremdraumschiff_v.x
+(II) schuss.y + t*schuss_v.y = fremdraumschiff.y + t*fremdraumschiff_v.y
+	
+(I):	
+==> 	t*(schuss_v.x - fremdraumschiff_v.x) = fremdraumschiff.x - schuss.x
+==> 	t = (fremdraumschiff_x - schuss_x) / (schuss_v.x - fremdraumschiff_v.x) 
+
+(II) schuss.y = fremdraumschiff.y + t*fremdraumschiff_v.y - t*schuss_v.y
+==> schuss.y = t * (fremdraumschiff_v.y - schuss_v.y) + fremdraumschiff.y
+
+
+(I) in (II):	
+schuss.y = ((fremdraumschiff_x - schuss_x) * (fremdraumschiff_v.y - schuss_v.y) ) / (schuss_v.x - fremdraumschiff_v.x)  + fremdraumschiff.y
+         = (schuss_x * (fremdraumschiff_v.y - schuss_v.y) ) / (fremdraumschiff_v.x - schuss_v.x) + 
+				fremdraumschiff_x * (fremdraumschiff_v.y - schuss_v.y) ) / (schuss_v.x - fremdraumschiff_v.x) + fremdraumschiff.y
+ 
+====> 
+schiff.s.y
+
+ * (1 - 1 / ABSTAND) + Math.cos(- alpha) * (ABSTAND + 1) = 
+				
+
+----------------------------
+Additionstheoreme		
+----------------------------
+		cos(α)=sin(90∘−α)
+		sin(α)=cos(90∘−α)
+		sin (x +- y) = sinx * cosy +- cosx * siny
+		cos (x +- y) = cosx * cosy +- sinx * siny	
+----------------------------
+TODO:
+1) Pruefe in welche Richtung muss ich gucken, um Raumschiff2 zu treffen, wenn ich jetzt schiessen wuerde. (Ergebnis := Treffrichtung)
+2) Wenn |aktuelleRichtung - TreffRichtung| < Epsilon   
+		wenn keine Mauer zwischen mir und dem Treffpunkt
+			dann schiesse
+3) Wenn aktuelleRichtung <> TreffRichtung
+		dann drehe in Richtung TreffRichtung
+		

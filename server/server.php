@@ -1,0 +1,561 @@
+<?php
+// prevent the server from timing out
+set_time_limit(0);
+
+
+// nach Apache-Start in xampp, starte shell und gebe dort folgendes Kommando ein:
+// php -q htdocs\jojoBattlePilot\jojoBattlePilot_0.942\server\server.php
+
+// include the web sockets server script (the server is started at the far bottom of this file)
+require 'class.PHPWebSocket.php';
+
+global $Server;
+global $spielerliste;
+global $currentSpielListe;
+global $max_spiel_id;  // Immer wenn ein neues Spiel erstellt wird, wird diese ID hochgezaehlt und in currentSpielListe gespeichert
+	  
+global $status;	// Die Status-Nachrichten (SCHIFFDATEN, GETROFFEN, INMAUER, SCHUSSDATEN, LOESCHE_SCHUSS, SCHUBDATEN, EXPLOSIONSDATEN, GRAVITATIONSSDATEN, CRASH)
+                // aller Clients werden in dieser Variablen gebündelt und erst dann an alle clients weiterverteilt, wenn der letzte client seinen status geliefert hat.
+				// Durch weniger viele Nachrichten verringert sich die LATENZ-Zeit.
+				// Status - Nachrichten werden nicht vom Server bearbeitet, sondern werden unverändert durchgereicht.
+				
+global $anzSpieler_haben_loop_beendet;		
+global $zeitstempel;
+global $TIMEOUT; // bis zu 50 Millisekunden (= 50000 Mikrosekunden) soll gewartet werden, bevor der Status verschickt wird.
+
+$TIMEOUT = 50000;
+//$zeitstempel = round(microtime(true) * 1000);
+$max_spiel_id = 0;
+$currentSpielListe[] = array("spiel_id" => $max_spiel_id, "map_name" => "Menue");
+
+// when a client sends data to the server
+function wsOnMessage($clientID, $data, $messageLength, $binary) {
+	global $spielerliste;
+	global $currentSpielListe;
+	global $max_spiel_id;
+	global $Server;
+	global $status;
+	global $anzSpieler_haben_loop_beendet;
+	
+	$lSpielID = $spielerliste[$clientID]["spiel_id"];
+	
+	$ip = long2ip( $Server->wsClients[$clientID][6] );
+	
+	// check if message length is 0
+	if ($messageLength == 0) {
+		$Server->wsClose($clientID);
+		return;
+	}
+	$dataArray = explode("|", $data);
+	/**
+	if ($dataArray[0] == "BASIS_NEU"){
+		$Server->log("Neuer Spieler ".$dataArray[2]);
+		$spielerliste[$clientID] = array("id" => $dataArray[1],"name" => $dataArray[2], "spiel_id" => $dataArray[3],"home_x" => $dataArray[4], "home_y" => $dataArray[5]);			
+		
+		foreach ($spielerliste as $i){
+			$ausgabeString = $i["id"]."|".$i["name"]."|".$i["spiel_id"]."|".$i["home_x"]."|".$i["home_y"];
+			$Server->log($ausgabeString);
+		}
+	}	
+	***/
+	if ($dataArray[0] == "STATUS"){
+		//$status[$clientID] = array_slice($dataArray, 1); // Das erste Element des client-Status wird abgeschnitten, es enthaelt den String 'STATUS'		
+		
+		$status[$clientID] = substr($data,7);
+		//$Server->log("dataArray: ".$dataArray[0].$dataArray[1].$dataArray[2].$dataArray[3].$dataArray[4].$dataArray[5]);
+		//$Server->log("Status von client ".$clientID." : ");
+		//$Server->log("Status von client ".$clientID." : ".$status[$clientID]);
+		
+		
+
+		$anzSpieler_haben_loop_beendet[$spielerliste[$clientID]["spiel_id"]]++;
+		
+		pruefeStatusAllerSpieler($lSpielID);
+		
+		
+		return; // Nachricht wird erst an andere clients weitergeleitet, wenn alle clients ihren Status gesendet haben, und zwar in Methode pruefeStatusAllerSpieler
+	}	
+	if ($dataArray[0] == "BASIS_WECHSEL"){
+		$Server->log("BASIS_WECHSEL von Spieler ".$dataArray[2]);
+
+		for($i=1; $i <= count($spielerliste); $i++){
+			if (strcmp($spielerliste[$i]["id"], $dataArray[1]) == 0){
+				$Server->log("Alte Basis:");
+				$Server->log($spielerliste[$i]["home_x"]."|".$spielerliste[$i]["home_y"]);
+				
+				$spielerliste[$i]["name"] = $dataArray[2];
+				$spielerliste[$i]["spiel_id"] = $dataArray[3];
+				$spielerliste[$i]["home_x"] = $dataArray[4];
+				$spielerliste[$i]["home_y"] = $dataArray[5];
+				
+				$Server->log("Neue Basis:");
+				$Server->log($spielerliste[$i]["home_x"]."|".$spielerliste[$i]["home_y"]);
+			}
+		}
+
+
+		$Server->log("Aktuelle Spielerliste:");
+		foreach ($spielerliste as $i){
+			$ausgabeString = $i["id"]."|".$i["name"]."|".$i["spiel_id"]."|".$i["home_x"]."|".$i["home_y"];
+
+			$Server->log($ausgabeString);
+		}		
+		
+		sendSpielerliste_an_Alle(); 
+	}	
+	if ($dataArray[0] == "NEUES_SPIEL_ERSTELLEN"){
+		
+		$max_spiel_id++;
+		
+					
+		$anzSpieler_haben_loop_beendet[$max_spiel_id] = 0;
+		
+		// Neuer Eintrag in currentSpielListe
+		$currentSpielListe[] = array("spiel_id" => $max_spiel_id, "map_name" => $dataArray[2]);
+		//$gameLoopIdSpiel[$max_spiel_id] = 1;
+
+		$Server->log("NEUES_SPIEL ".$max_spiel_id." mit der Karte ".$dataArray[2]." wurde erstellt von Spieler ".$dataArray[1]);
+
+		//$spielerliste[$clientID] = array("id" => $dataArray[1],"name" => $dataArray[2], "spiel_id" => $max_spiel_id,"home_x" => $dataArray[4], "home_y" => $dataArray[5]);			
+
+		
+		// Weise dem Spieler in der spielerliste die neu erstellte spiel_id zu
+		////setAttributInSpielerliste($dataArray[1], "spiel_id", $max_spiel_id);	
+			
+    
+		sendCurrent_Spiel_Liste_An_Alle();
+
+		// Sende an den aktuellen Client die neu generierte spiel_id
+		$neueSpielID_serialisiert = "NEUE_SPIEL_ID";
+		$neueSpielID_serialisiert = $neueSpielID_serialisiert."|".$max_spiel_id."|".$dataArray[2];	
+
+		$Server->log(" Neue SpielID Serialisiert: ".$neueSpielID_serialisiert);
+		
+		
+		//$Server->wsSend($clientID, "LOOP_ID_NEU|1");
+		//$Server->log("Sende LOOP_ID_NEU zu Spieler mit der ID = ".$clientID);
+
+		//$Server->wsSend($clientID, "LOOP_ID_AKTUELL|".$gameLoopIdSpiel[$max_spiel_id]);
+		$Server->wsSend($clientID, $neueSpielID_serialisiert);
+									
+		// Weitere Nachrichten muessen  nicht verschickt werden
+		return;		
+
+	}
+	if ($dataArray[0] == "SPIEL_BEITRETEN"){
+		$Server->log("Spieler ".$dataArray[1]."tritt Spiel mit der ID ".$dataArray[3]." bei.");
+
+		$spielerliste[$clientID] = array("id" => $dataArray[1],"name" => $dataArray[2], "spiel_id" => $dataArray[3],"home_x" => $dataArray[4], "home_y" => $dataArray[5]);			
+		//$Server->wsSend($clientID, "LOOP_ID_AKTUELL|".$gameLoopIdSpiel[$dataArray[3]]);
+
+
+		sendSpielerliste_an_Alle(); 
+		//sendCurrent_Spiel_Liste_An_Alle();
+
+	}
+	if ($dataArray[0] == "SPIEL_VERLASSEN"){
+		$Server->log("Spieler ".$dataArray[1]."hat Spiel mit der ID ".$dataArray[2]." verlassen.");
+		// Loesche spiel_id aus current_spiel_liste, wenn es keinen anderen spieler mehr gibt, der im Spiel ist
+		pruefeObAndereSpielerImSpiel($dataArray[1]) ;
+    	
+		leiteNachrichtWeiter($clientID, $data);
+		// Weise dem Spieler in der spielerliste den Wert 0 (= Spieler ist im Menue) zu
+		setAttributInSpielerliste($dataArray[1], "spiel_id", 0);	
+		
+
+
+		sendCurrent_Spiel_Liste_An_Alle();
+		sendSpielerliste_an_Alle(); 
+ 		
+		pruefeStatusAllerSpieler($lSpielID);
+		
+		return; // Die Nachricht wurde bereits weitergeleitet, deshalb muss hier die Funktion verlassen werden.
+	}	
+	if ($dataArray[0] == "NEUER_SPIELER"){
+////$Server->log(">>>>>>>>>>>".$gameLoopIdSpiel[0]);	
+		$spielerliste[$clientID] = array("id" => $dataArray[1],"name" => $dataArray[2], "spiel_id" => 0,"home_x" => 0, "home_y" => 0);
+		$Server->log("neuer Spieler mit ID ".$dataArray[1]." und Name ".$dataArray[2]);
+		sendSpielerliste_an_Alle(); 
+		sendCurrent_Spiel_Liste_An_Alle();
+	}
+
+	leiteNachrichtWeiter($clientID, $data);
+}
+
+/**
+ * Sende die Nachricht, die vom Client kam, an alle anderen Clients weiter, die sich im selben Spiel befinden
+ */
+function leiteNachrichtWeiter($clientID, $data){
+	global $Server;
+	global $spielerliste;
+	
+	foreach ($spielerliste as $i){
+		if (strcmp($i["spiel_id"], $spielerliste[$clientID]["spiel_id"]) == 0){
+			if ($i["id"] != $clientID){
+				$Server->wsSend($i["id"], $data);
+			}
+		}		
+	}
+}
+/**
+ * Wenn alle Spieler im aktuell betrachten Spiel die aktuelle Spielschleife durchlaufen haben,
+ * werden alle Status-Daten an alle Clients gesendet
+ */
+function pruefeStatusAllerSpieler($dieSpielID){
+	global $spielerliste;
+	global $Server;
+	//global $gameLoopIdSpiel;
+	global $anzSpieler_haben_loop_beendet;
+	global $status;
+	global $zeitstempel;
+	global $TIMEOUT;
+
+	
+	$anzSpielerImSelbenSpiel = 0;
+	
+	foreach ($spielerliste as $i){		
+		if (strcmp($i["spiel_id"], $dieSpielID) == 0){
+			$anzSpielerImSelbenSpiel++;
+		}		
+	}		
+	
+	//$Server->log("AnzSpielHabLoopBeendet: ".$anzSpieler_haben_loop_beendet[$spielerliste[$clientID]["spiel_id"]]);
+	
+	//$Server->log("AnzSpielerImSelbenSpiel: ".$anzSpielerImSelbenSpiel);
+	
+	
+	
+	// Wenn alle Spieler des aktuellen Spiels die letzte GameLoop durchlaufen haben, werden alle Status-Daten an alle Clients gesendet
+	// Alledings wird der Status, den ein client gesendet hatte, nicht an denselben client zurueck geschickt.
+	if ($anzSpieler_haben_loop_beendet[$dieSpielID] == $anzSpielerImSelbenSpiel){
+			// Anstatt auf dem client ein Timeout zu schalten, wird auf dem Server ein sleep gestartet.
+			/*
+			$warteZeit = $TIMEOUT - (round(microtime(true) * 1000000) - $zeitstempel[$dieSpielID]);
+			//$Server->log("WarteZeit fuer Spiel ".$dieSpielID." = ".$warteZeit." Mikrosekunden");
+			if ($warteZeit < 0){
+				$warteZeit = 0;
+			}
+			
+			usleep($warteZeit);
+			*/
+			foreach ($spielerliste as $i){
+				if (strcmp($i["spiel_id"], $dieSpielID) == 0){   // alle Spieler im aktuell betrachteten Spiel
+					$gesamtStatus = "STATUS|";
+					/*
+					if ($i["id"] != $clientID){  // nicht sich selber den Status zurueckschicken
+						$gesamtStatus += $status[$i["id"]];	 
+					}
+					*/
+					
+					foreach ($spielerliste as $j){
+						if (strcmp($j["spiel_id"], $dieSpielID) == 0){
+							if ($j["id"] != $i["id"]){  // nicht sich selber den Status zurueckschicken
+							    //$Server->log("j: ".$j["id"]);
+								//$Server->log("status_j: ".$status[$j["id"]]);
+								if (array_key_exists($j["id"], $status)){
+									$gesamtStatus = $gesamtStatus.$status[$j["id"]];	// Konkatiniere Status an GesamtStatus 
+								}
+							}
+						}		
+					}
+				
+					//$Server->log("Id : ".$i["id"]);
+					//$Server->log("GesamtStatus: ".$gesamtStatus);
+					$Server->wsSend($i["id"], $gesamtStatus);			
+				}		
+			}	
+			
+			$anzSpieler_haben_loop_beendet[$dieSpielID] = 0;
+			$zeitstempel[$dieSpielID] = round(microtime(true) * 1000000);
+	}
+}
+
+
+
+// when a client connects
+function wsOnOpen($clientID)
+{
+	global $Server;
+	global $spielerliste;
+	
+	$Server->log( "OPEN");
+	
+	$ip = long2ip( $Server->wsClients[$clientID][6] );
+
+
+	$Server->log( "$ip ($clientID) has connected." );
+	
+
+	// Dem neuen Spieler wird seine ID gesendet.
+	$Server->wsSend($clientID, "CLIENT_ID"."|".$clientID);	
+	
+	$map_dir = "htdocs/jojoBattlePilot/maps/";
+	$handle=opendir ($map_dir);
+	//echo "Verzeichnisinhalt:<br>";
+	
+	$i = 0;
+	
+	
+	// Alle Maps, die sich im Verzeichnis map_dir befinden, werden hintereinander an den client geschickt.
+	while ($datei = readdir ($handle)) {
+		if (strcasecmp(substr($datei, -4,4), ".map") == 0){
+			$map = "MAP";
+		 	$karte[$i] = $map_dir.$datei;
+		 	$Server->log( "loading ".$karte[$i]." ...");
+		 	
+		 	
+		 	$map .= "|".substr($datei, 0, -4); // Kartenname ohne Endung mit uebertragen
+			$zeilen = file ($karte[$i]);
+			foreach ($zeilen as $zeile) {
+			    $map .= "|".$zeile;	    
+			} 
+			
+			$Server->log( "Sende Karte an Spieler ".$clientID);
+	        $Server->wsSend($clientID, $map);	
+	    }
+
+		$i++;
+	}
+	closedir($handle);
+	
+
+	
+	//$karte[0] = "htdocs/jojoBattlePilot/maps/largetournament.map";
+	//$karte[1] = htdocs/jojoBattlePilot/maps/globe.map;
+	//$karte[2] = "htdocs/jojoBattlePilot/maps/wargames.map";
+	
+	//$Server->log( "loading ".$karte[0] );
+	//$Server->log( "loading ".$karte[1] );
+	//$Server->log( "loading ".$karte[2] );
+
+	
+		
+
+     /////	$spielerliste[$clientID] = array("id" => $clientID,"name" => "?", "spiel_id" => 0,"home_x" => 0, "home_y" => 0);			
+    /***
+	sendSpielerliste_an_Alle(); 
+  
+	sendCurrent_Spiel_Liste_An_Alle(); 
+	***/
+	
+	
+	
+	//Send a join notice to everyone but the person who joined
+	/***
+	foreach ( $Server->wsClients as $id => $client ){
+		if ( $id != $clientID ){
+			$Server->wsSend($id, "Visitor $clientID ($ip) has joined the room.");
+		}
+	}
+	***/
+}
+
+// when a client closes or lost connection
+function wsOnClose($clientID, $status) {
+	global $Server;
+	global $spielerliste;
+	
+	$lSpielID = $spielerliste[$clientID]["spiel_id"];
+	
+	$ip = long2ip( $Server->wsClients[$clientID][6] );
+	
+	
+	$name = getSpielername($clientID);
+	if ($name != ""){	
+		//Send a user left notice to everyone in the room
+		foreach ( $Server->wsClients as $id => $client )
+			if ( $id != $clientID ){
+				$Server->wsSend($id, "DISCONNECT|".$clientID."|".$name);
+			}
+	}
+  //------------------------------------------------------------------------------------------------------
+	// Pruefe, ob Spieler der einzige im Spiel war. Wenn ja, loesche das Spiel aus currentSpielListe
+  //------------------------------------------------------------------------------------------------------
+	pruefeObAndereSpielerImSpiel($clientID);
+	
+	$Server->log( "$ip ($clientID) has disconnected." );
+	// Loesche den Client aus der Spielerliste
+	unset($spielerliste[$clientID]);
+	
+
+ 	sendCurrent_Spiel_Liste_An_Alle();	
+	sendSpielerliste_an_Alle(); 
+	
+
+	
+	pruefeStatusAllerSpieler($lSpielID);
+	
+	$Server->log("Aktuelle Spielerliste:");
+	
+	if ($spielerliste != null){
+		foreach ($spielerliste as $i){
+			$ausgabeString = $i["id"]."|".$i["name"]."|".$i["spiel_id"]."|".$i["home_x"]."|".$i["home_y"];
+			$Server->log($ausgabeString);
+		}		
+	}
+		
+	
+}
+
+
+
+
+/**
+ * Pruefe, ob der  Spieler ($clientID) der einzige im aktuellen Spiel ($spielID) ist.
+ * Wenn ja, loesche das Spiel aus currentSpielListe und return false, sonst return true 
+ */
+function pruefeObAndereSpielerImSpiel($clientID){
+	global $spielerliste;
+	global $currentSpielListe;
+	global $Server;
+	
+  	$spielID = getSpielID_bySpielerID($clientID);
+	
+
+	
+	if ($spielID  != 0){
+		$anzahlSpieler = 0;
+		
+		foreach ($spielerliste as $i){
+			if (strcmp($i["spiel_id"], $spielID) == 0){
+				$anzahlSpieler++;
+			}		
+		}	
+		if ($anzahlSpieler == 1 ){ // nur der Spieler selber befindet sich noch im Spiel
+			unset($currentSpielListe[$spielID]); // Spiel aus Liste entfernen
+			$Server->log("Das Spiel mit der ID ".$spielID." wurde aus der Spielliste entfernt.");
+			return false;
+		}
+			
+ 	}	
+  	return true;
+}
+/**
+ * Gibt aus spielerliste die ID des Spieles, welchem der Spieler zugeordnet ist, zurueck
+ */
+function getSpielID_bySpielerID($spielerID){
+		global $spielerliste;
+		global $Server;
+
+		if ($spielerliste == null){
+			$Server->log("spielerliste ist noch leer.");
+			return null;
+		}
+		foreach ($spielerliste as $i){
+			if (strcmp($i["id"], $spielerID) == 0){
+				//$Server->log("spiel_id: ".$i["spiel_id"]);
+				return $i["spiel_id"] ;
+			}		
+		}
+		return null; // Ein Spieler ist erst in spielerliste, wenn er sich eine NeueBasis erstellt hat.
+
+}
+	
+/**
+ * Sucht aus der globalen Variable spielerliste nach der uebergeben clientID und gibt den 
+ * zugehoerigen Spielernamen zurueck. Wenn nicht vorhanden, wird ein LeerString zurueckgegeben.
+ */
+function getSpielername($id){
+	global $spielerliste;
+	
+	$spielername = "";
+	if ($spielerliste != null){
+		foreach ($spielerliste as $i){
+			if ($i["id"] == $id){
+				$spielername =  $i["name"];
+			}
+		}
+	}
+	return $spielername;
+}
+/**
+ * setzt ein Attribut im array Spielerliste
+ */
+function setAttributInSpielerliste($spielerID, $attribut_name, $attribut_wert){	
+	global $spielerliste;
+	global $Server;
+
+	for($i=1; $i <= count($spielerliste); $i++){
+		if ($spielerliste[$i]["id"] == $spielerID){
+			$spielerliste[$i][$attribut_name] = $attribut_wert;
+
+			$Server->log("Attribut geaendert: ".$spielerliste[$i]["id"]."|".$spielerliste[$i]["name"]."|".$spielerliste[$i]["spiel_id"]."|".$spielerliste[$i]["home_x"]."|".$spielerliste[$i]["home_y"]);
+		}
+	}
+		
+
+}
+/** 
+ * Sendet die aktuelle Spielerliste an den client, der neu beigetreten ist.
+ */
+function sendSpielerliste_an_Alle(){
+			global $Server;
+			global $spielerliste;
+			
+			
+			
+				
+			$spielerlisteString="SPIELERLISTE";
+			if ($spielerliste != null){
+				foreach ($spielerliste as $i){
+					$spielerlisteString .= "|".$i["id"]."|".$i["name"]."|".$i["spiel_id"]."|".$i["home_x"]."|".$i["home_y"];
+				}
+			}	
+			
+			$Server->log( $spielerlisteString );
+			
+			// Sende die spielerliste an alle Clients, auch an den Aufrufer
+			foreach ( $Server->wsClients as $id => $client ){
+						$Server->wsSend($id, $spielerlisteString);
+			}			
+			
+}
+
+/**
+ * Sendet die aktuelle Liste von Spielen [spiel_id, mapname] an alle clients, unabhaengig davon, in welchem Spiel sich ein client befindet.
+ */
+function sendCurrent_Spiel_Liste_An_Alle(){
+			global $Server;
+			global $currentSpielListe;
+	
+			$spielliste_serialisiert = "CURRENT_SPIEL_LISTE";
+
+			if ($currentSpielListe != null){
+				foreach ($currentSpielListe as $i){
+					$Server->log(" currentSpielListe (spiel_id): ".$i["spiel_id"]);
+					$Server->log(" currentSpielListe (map_name): ".$i["map_name"]);
+
+					$spielliste_serialisiert = $spielliste_serialisiert."|".$i["spiel_id"]."|".$i["map_name"];	
+
+				}							
+			}
+			$Server->log(" Spielliste Serialisiert: ".$spielliste_serialisiert);
+			
+			// Sende die spielliste an alle Clients, auch an den Aufrufer
+			foreach ( $Server->wsClients as $id => $client ){
+						$Server->wsSend($id, $spielliste_serialisiert);
+			}
+
+}
+
+
+// start the server
+$Server = new PHPWebSocket();
+$Server->bind('message', 'wsOnMessage');
+$Server->bind('open', 'wsOnOpen');
+$Server->bind('close', 'wsOnClose');
+$Server->bind('basisChange', 'wsOnBasisChange');
+
+// for other computers to connect, you will probably need to change this to your LAN IP or external IP,
+// alternatively use: gethostbyaddr(gethostbyname($_SERVER['SERVER_NAME']))
+//$php_serverAdresse = gethostbyaddr(gethostbyname($_SERVER['SERVER_NAME']));
+//$php_serverAdresse = gethostbyname($_SERVER['SERVER_NAME']);
+//$Server->wsStartServer($php_serverAdresse, 9300);
+
+$Server->wsStartServer('127.0.0.1', 9300);
+
+//$Server->wsStartServer('85.214.71.4', 9300);
+
+//$Server->wsStartServer('www.modecreator.com', 9300);
+//$Server->wsStartServer($php_serverAdresse, 9300);
+//$Server->wsStartServer('81.169.145.157', 9300);

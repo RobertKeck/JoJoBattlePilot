@@ -1,0 +1,1642 @@
+
+<!doctype html>
+<html>
+<head>
+<title>Jojobattlepilot</title>
+
+<meta charset='UTF-8' />
+
+<!-- Deaktivieren des Zoomens: -->
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Robert Keck">
+<meta name="copyright" content="Robert Keck">
+<meta name="description" content="Jojobattlepilot - ein Multiplayer Browser Game - Navigiere mit deinem Raumschiff durch 2D - Landschaften und versuche gegnerische Raumschiffe abzuschiessen.">
+<meta name="keywords" content="Jojobattlepilot, Multiplayer, Browser Game, 2D, Online Game, Online Spiel">
+<style>
+
+#log {width:300px;height:200px}
+
+
+
+  #red, #green, #blue {
+    width: 30px;
+    margin: 0px;
+    
+  }
+  #swatch {
+    width: 80px;
+    height: 80px;
+    background-image: none;
+  }
+
+  #f1 { position:fixed; top:10px; left:10px;  }
+
+</style>
+
+<link rel="apple-touch-icon-precomposed" href="http://85.214.71.4:81/jojobattlepilot/jojoBattlePilot.PNG" >
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.3.1/jquery.mobile-1.3.1.min.css" />
+<script src="http://code.jquery.com/jquery-1.8.3.min.js"></script>
+<script src="http://code.jquery.com/ui/1.10.0/jquery-ui.js"></script>
+<script src="http://code.jquery.com/mobile/1.3.1/jquery.mobile-1.3.1.min.js"></script>
+
+			 
+<script src="<?php echo $versionsPfad;?>/fancywebsocket.js" type="text/javascript"> </script>
+<script src="<?php echo $versionsPfad;?>/basis.js" type="text/javascript"> </script>
+<script src="<?php echo $versionsPfad;?>/koordinate.js" type="text/javascript"> </script>
+<script src="<?php echo $versionsPfad;?>/raumschiff.js" type="text/javascript"> </script>
+<script src="<?php echo $versionsPfad;?>/schuss.js" type="text/javascript"> </script>
+<script src="<?php echo $versionsPfad;?>/schubPartikel.js" type="text/javascript"> </script>
+<script src="<?php echo $versionsPfad;?>/explosionsPartikel.js" type="text/javascript"> </script>
+<script src="<?php echo $versionsPfad;?>/pilot.js" type="text/javascript"> </script>
+<script src="<?php echo $versionsPfad;?>/karte.js" type="text/javascript"> </script>
+<script src="<?php echo $versionsPfad;?>/spiel.js" type="text/javascript"> </script>
+<script src="<?php echo $versionsPfad;?>/ecke.js" type="text/javascript"> </script>
+<script src="<?php echo $versionsPfad;?>/polygon.js" type="text/javascript"> </script>
+<script src="<?php echo $versionsPfad;?>/mauerpunkt.js" type="text/javascript"> </script>
+<script src="<?php echo $versionsPfad;?>/gravitationsPartikel.js" type="text/javascript"> </script>
+<script src="<?php echo $versionsPfad;?>/globals.js" type="text/javascript"> </script>
+<script src="<?php echo $versionsPfad;?>/sendData.js" type="text/javascript"> </script>
+<script src="<?php echo $versionsPfad;?>/sound.js" type="text/javascript"> </script>
+<script src="<?php echo $versionsPfad;?>/serverConnection.js" type="text/javascript"> </script>
+<script src="<?php echo $versionsPfad;?>/hammer.min.js" type="text/javascript"> </script>
+<script src="<?php echo $versionsPfad;?>/autopilot.js" type="text/javascript"> </script>
+<script src="<?php echo $versionsPfad;?>/tastaturbelegung.js" type="text/javascript"> </script>
+<script src="<?php echo $versionsPfad;?>/zeichneAlles.js" type="text/javascript"> </script>
+
+
+
+
+	
+<script>  
+
+/**
+ ************************************************
+ * Version 0.921
+ * Datum: 08.05.2015
+ ************************************************
+ 1) Die Touchsteuerung wird umgestellt: das Raumschiff dreht sich in die Richtung, in die der Finger vom Kreismittelpunkt aus gesehen zeigt.
+ Ist der Finger ausserhalb des Kreises, wird zusaetzlich Schub gegeben.
+ 2) Das Radar ist jetzt rund.
+ 3) Nach Eingabe des Nicknames geht es in den Fullscreen
+ ************************************************
+ ************************************************
+ * Version 0.923
+ * Datum: 31.07.2015
+ ************************************************
+ 1) Zoom ist moeglich
+ 2) neuer Start-Dialog, der auf jedem Browser funktioniert
+ ************************************************ 
+ ************************************************
+ * Version 0.924
+ * Datum: 04.08.2015
+ ************************************************
+ 1) Maximal Radargroesse in Menue einstellbar und initial auf Mobilgeraeten kleiner
+ ************************************************
+ * Version 0.925
+ * Datum: 20.11.2015
+ ************************************************
+ 1) neue Buttons für Basis-Wechsel und fuer Gravitationswelle
+ ************************************************  
+ ************************************************
+ * Version 0.926
+ * Datum: 04.12.2015
+ ************************************************
+ 1) Hauptmenue an Bildschirmausrichtung / Groesse  angepasst
+ ************************************************  
+ * Version 0.927
+ * Datum: 07.12.2015
+ ************************************************
+ 1) Feldgroesse (eines Feldes) und Radargroesse initial an Fenstergroesse anpassen
+ ************************************************  
+ * Version 0.928
+ * Datum: 08.12.2015
+ ************************************************
+ 1) Drehung auch mit Beschleunigung
+ ************************************************  
+ * Version 0.928
+ * Datum: 11.12.2015
+ ************************************************
+ 1) Sound funktioniert auf mobile. Das Laden von Sound-Daten funktioniert in den meissten 
+    Mobilbrowsern nur nach Knopfdruck
+ ************************************************  
+ * Version 0.930
+ * Datum: 15.12.2015
+ ************************************************
+ 1) Alle Basen werden erkannt (Bug an Spielfeldgrenzen behoben)
+ ( 2) Werbung einbauen --> hat nicht funktioniert mit google)
+ ************************************************
+ * Version 0.931
+ * Datum: 22.12.2015
+ ************************************************
+ 1) Sound auf Mobile ohne Verzoegerung,  via Sound-Sprites: Alle mp3's in eine Datei hintereinander packen. Diese dann jeweils von-bis abspielen,
+    am Ende eines Geraeusches nicht stoppen, sondern Volume auf 0.
+ 2) Verhindern, dass auf mobile waehrend des Spiel durch einen touch sich die Browser-Suchleiste oeffnet (prevent default bei touch)
+ ************************************************
+ * Version 0.932
+ * Datum: 23.12.2015
+ ************************************************ 
+ 1) Auf Mobile: Zoom auch durch Fingerbewegung, sowohl fuer Spielfeld, als auch fuer Radar.
+ 
+ ************************************************
+ * Version 0.933
+ * Datum: 08.03.2016
+ ************************************************ 
+ 1) Game-Loops aller Spieler eines Spieles werden synchronisiert.
+
+ ************************************************
+ * Version 0.934
+ * Datum: 31.03.2016
+ ************************************************ 
+ 1) Die Synchronisation der GameLoops hat zu Performance Problemen gefuehrt. Durch zu hohe Latenzzeiten war es bereits bei 2 
+    Spielern unspielbar im Internet. (im Gegensatz zum Intranet)
+	Daher wurde die Verarbeitungslogik geaendert:
+	Saemtliche StatusDaten (SCHIFFDATEN, SCHUBDATEN, SCHUSSDATEN, LOESCHE_SCHUSS, EXPLOSIONSDATEN, GRAVITATIONSSDATEN, GETROFFEN, INMAUER, CRASH, MESSAGE)
+	werden gesammelt und am Ende einer GameLoop zum Server geschickt. Der Server sammelt alle Status-Daten aller Clients und fuegt sie zu einem Gesamtstatus
+	zusammen. Nachdem der letzte Client seinen Status geschickt hat, verschickt der Server den gesammelten GesamtStatus an aller Clients (die sich im selben Spiel befinden).
+	Erst wenn ein Client diesen GesamtStatus erhaelt, startet er seinen naechsten GameLoop-Durchlauf. (Synchronisation)
+	
+	Damit erhaelt jeder Client pro Runde vom Server nur noch eine Nachricht, was zu deutlich geringerer Latenz fuehrt.
+	Damit ist die Synchronisation machbar.
+ 
+ *************************************************
+ * Version 0.935
+ * Datum: 04.04.2016
+ ************************************************ 
+ 1) Facebook Button wieder aktivieren
+ 2) Zufalls-Autopilot, der ueber Menue an/ausschaltbar ist
+ ************************************************ 
+ 
+ 
+ *************************************************
+ * Version 0.936
+ * Datum: 09.04.2016
+ ************************************************ 
+ 1) Damit es weniger ruckelt, wird der Status der aktuellen Spielschleife verschickt, bevor gezeichnet wird.
+    (Ob das wirklich viel Performance bringt, konnte ich nicht feststellen)
+ 2) Im InternetExplorer kann jetzt auch der Runde Radar angezeigt werden	
+ 3) Wegen eines Aktuellen Bugs in Google Chrome wird beim Start mit Google Chrome die Maueart = Klassisch gewählt. Im Moment funktioniert in Chrome save + restore nicht, weil 
+    voreingestellt "Beschleunigtes 2D-Canvas" = aktiv ist: Verwendet kein Softwarerendering, sondern aktiviert die Nutzung des GPU zur Berechnung von 2D-Canvasrendering
+	Kann der User nur manuell ändern, indem er chrome://flags/ startet und dort die Option deaktiviert und dann Chrome neu startet
+ ************************************************ 
+ 
+ *************************************************
+ * Version 0.937
+ * Datum: 18.04.2016
+ ************************************************ 
+ 1) start der gameLoop optimiert
+ 2) auskommentierten Code entfernt
+
+
+ *************************************************
+ * Version 0.938
+ * Datum: 20.04.2016
+ ************************************************ 
+ 1) start der gameLoop wieder von setInterval auf setTimeout zurueckgestellt und dabei optimiert
+    Hintergrund: Wenn in der Spielschleife noch kein Status der anderen Spieler vom Server gekommen ist, soll nicht wieder ein voller TIMEOUT bis 
+	zum naechsten Aufruf der Spielschleife gewartet werden.
+ 
+ *************************************************
+ * Version 0.940
+ * Datum: 05.05.2016
+ ************************************************ 
+ 1) Ungenauigkeiten an den Raendern beim Zeichnen der GesamtMauer bereinigt, was bei einigen Zoom-Einstellungen zu 3 horizontalen und oder 3 vertikalen Linien fuehrte
+ 2) Auslagerung der Zeichen-Funktionen in extra Datei zeichneAlles
+  *************************************************
+ * Version 0.941
+ * Datum: 06.06.2016
+ ************************************************ 
+ 1) Neue Raumschiffe: Jetzt ist es moeglich, quadratische Bilder mit mindestens 100x100 Pixel als Raumschiff einzubinden.
+	Wichtig bei einer Bild-Datei: Das Format muss "png" sein, da nur dort der Hintergrund um das Raumschiff unsichtbar sein kann,
+	was z.B. mit "jpg" nicht gespeichert werden kann.
+    Die klassischen einfachen (Dreieck-)Raumschiffe gibt es aus sentimentalen Gruenden auch weiterhin. 
+	Fuer die neuen Raumschiffe muessen analog zu den alten Raumschiffen alle Eckpunkte definiert werden, um eine korrekte Kollisionsabfrage
+	durchfuehren zu koennen.
+	
+	Programmierhinweis:
+	Um ein neues Raumschiffbild hinzuzufuegen, muss folgendes getan werden:
+	a) Die Datei Raumschiff<x>.png in das Verzeichnis jojobattlepilot/raumschiffbilder einfuegen.
+	b) In der Datei jojobattlepilot/raumschiffbilder/MenuTest3.js in der Methode drawFlugzeugImage das neue image einlesen.
+	c) jojobattlepilot/raumschiffbilder/MenueTest5_Swipe.html starten und per click die Ecken markieren. Die letzte Ecke 
+		ist der Punkt, wo der Schuss raus kommt.
+	d) In der Browser-console wird waehrend des "Markierens" Programmcode ausgegeben, der dann in die Datei polygon.js
+		eingefuegt werden muss.
+	e) In globals.js muss das array alleRaumschiffTypen um den neuen Typ erweitert werden.
+ ************************************************ 	
+ * Version 0.942
+ * Datum: 28.06.2016
+ ************************************************ 
+ 1) noch ein paar weitere neue Raumschiffe ("banshee6", "broodlord2", "drohne6", "kreuzer16", "phoenics5", "tempiest5", "viking4", "viper5")
+ 2) Drehbewegung wird bei Mauerberuehrung ebenfalls rueckgaengig gemacht
+ 3) Raumschiffe, die gerade explodiert sind, werden nicht im Radar angezeigt
+ ************************************************
+ * todo
+ ************************************************
+ 3) Als App in GooglePlay integrieren
+ 4) Facebook Seite JoJoBattlePilot erstellen.
+ 5) Hilfe-Menu erstellen (Tastaturbelegung, Spielbeschreibung)
+ 6) Plausi: ob max-Anzahl User zu einer Karte errreicht ist.
+ 7) Spiel Verlinken auf einer Browser-Game Web-Seite.
+ 8) Tanken (Energie wird aufgefuellt). Dazu neuer Tank-Button fuer Mobile
+ 9) Hübschere Raumschiffe (Echte Grafiken)
+ 10) Moeglichkeit fuer Schutzschirm schaffen. (Wenn Schutzschirm an, dann kann man selber nicht schiessen.
+     Wenn man getroffen wird, dann stirbt man nicht, sondern verliert Energie)
+ 11) Computer-Raumschiffe --> Dazu beim Oeffenen eines Spiels ein neues Optionen-Fenster,
+     in dem Einstellungen wie Roboter an/aus oder Anziehungskraft an/aus Schutzschirm ja/nein   durchgefuehrt werden koennen
+ 12) App-Icon fuer Mobile	 
+ 13) Karteneditor
+ 15) Mehrsprachige Menues: Abhaenig von Browser-Einstellung wird Deutsch oder Englisch angezeigt
+ 16) Chat Fenster muss auch auf Mobile funktionieren
+ ************************************************ 
+
+ */
+ 
+   $(function() {
+    $( "#dialog-confirm" ).dialog({
+      resizable: true,
+      color: "#ff0000",
+	  modal: true,
+    });
+	
+  });	
+ ;
+ 
+function drawRaumschiff(raumschiffTyp){
+	
+	var canvasID = "Canvas"+raumschiffTyp;
+	var canvasRaumschiff = document.getElementById(canvasID);
+    if(canvasRaumschiff.getContext){
+        var context = canvasRaumschiff.getContext('2d');
+        context.fillStyle = meinRaumschiff.farbe; //"rgb(0, 0, 0)";
+        
+	
+			context.beginPath();
+			context.moveTo(20, 20);
+			context.lineTo(30,20);
+			context.lineTo(35,35);
+			context.lineTo(20,30);
+			context.lineTo(20,20);
+			context.fill();
+			
+			context.strokeStyle = "#7F7F7F"
+			context.stroke();			
+			        
+    }
+ }
+
+ 
+  
+function getLautstaerke(){
+	return grundlautstaerke;
+}
+  
+function canvasInitialisierung(){
+    
+	bildNeuAufbau();
+	
+	// Focus im canvas setzen
+	$(canvas_Spielfeld).focus();
+
+}
+
+function oeffneChatFenster(){
+	$( "#popupEinstellungen" ).popup( "close" ); // Popup-Menue schliesen
+	$( "#popupMessage" ).show(); 
+	$( "#message" ).focus();
+}
+function WebSocketTest()
+{
+  if ("WebSocket" in window)
+  {
+     alert("WebSocket is supported by your Browser!");
+     // Let us open a web socket
+     var ws = new WebSocket("ws://localhost:9300");
+     ws.onopen = function()
+     {
+        // Web Socket is connected, send data using send()
+        ws.send("Message to send");
+        alert("Message is sent...");
+     };
+     ws.onmessage = function (evt) 
+     { 
+        var received_msg = evt.data;
+        alert("Message is received...");
+     };
+     ws.onclose = function()
+     { 
+        // websocket is closed.
+        alert("Connection is closed..."); 
+     };
+  }
+  else
+  {
+     // The browser doesn't support WebSocket
+     alert("WebSocket NOT supported by your Browser!");
+  }
+}
+function addRadioButtonClassicRaumschiffTyp(button_name){
+	$("#radio_group_raumschiffTyp").append("<label for='"+ button_name + "'> <canvas id='Canvas"+button_name+"' width='"+feldgroesse+"' height='"+feldgroesse+"' >	Dein Browser kann diese Grafik nicht darstellen.</canvas></label><input type='radio' name='raumschiffTypRadioGruppe' id='"+button_name+"' value='"+button_name+"'>")
+	
+	if (meinTyp == button_name){
+		$(button_name).prop('checked',true);
+	}
+	var canvasID = "Canvas"+button_name;
+	var canvasRaumschiff = document.getElementById(canvasID);
+	var kanten = new polygon(button_name);
+	kanten.berechneEckenKoordinaten(new koordinate(feldgroesse/2, feldgroesse/2), Math.PI);
+    if(canvasRaumschiff.getContext){
+        var contextRaumschiff = canvasRaumschiff.getContext('2d');
+		zeichneRaumschiff(contextRaumschiff, kanten, 0,0 ); 
+
+		
+	}
+
+
+
+	 $('#radio_group_raumschiffTyp').change(function() {		
+			meinTyp = $("input[name='raumschiffTypRadioGruppe']:checked").val();
+			meinRaumschiff.typ = meinTyp;
+			meinRaumschiff.polygon = new polygon(meinTyp);
+			meinRaumschiff.berechneEcken();
+	});	
+
+	
+}
+function addRadioButtonGrafikRaumschiffTyp(button_name){
+	$("#radio_group_raumschiffTyp").append("<label for='"+ button_name + "'> <canvas id='Canvas"+button_name+"' width='"+feldgroesse+"' height='"+feldgroesse+"' >	Dein Browser kann diese Grafik nicht darstellen.</canvas></label><input type='radio' name='raumschiffTypRadioGruppe' id='"+button_name+"' value='"+button_name+"'>")
+	
+	if (meinTyp == button_name){
+		$(button_name).prop('checked',true);
+	}
+	var canvasID = "Canvas"+button_name;
+	var canvasRaumschiff = document.getElementById(canvasID);
+    if(canvasRaumschiff.getContext){
+        var contextRaumschiff = canvasRaumschiff.getContext('2d');
+
+		for (var i = 0; i < alleRaumschiffBilder.length; i++){
+			if (alleRaumschiffBilder[i].typ == button_name){
+				contextRaumschiff.drawImage(alleRaumschiffBilder[i].image, 0, 0 , feldgroesse_view, feldgroesse_view);
+			}
+		}	
+				
+		
+	}
+
+
+
+	 $('#radio_group_raumschiffTyp').change(function() {		
+			meinTyp = $("input[name='raumschiffTypRadioGruppe']:checked").val();
+			meinRaumschiff.typ = meinTyp;
+			meinRaumschiff.polygon = new polygon(meinTyp);
+			meinRaumschiff.berechneEcken();
+	});	
+
+	
+}
+function addRadioButtonMap(button_name){
+	 $("#radio_group_neuesSpielErstellen").append("<li><label for='"+ button_name + "'>" + button_name + "</label><input type='radio' checked='checked' name='mapliste' id='"+button_name+"' value='"+button_name+"'></li>")
+
+	 $('#radio_group_neuesSpielErstellen').change(function() {		
+			vorschau_map = getMapByName($("input[name='mapliste']:checked").val());
+			drawRadarGesamt(vorschau_map);
+			
+			drawCanvasRadarOhneRaumschiffe(vorschau_map);	
+	});	
+	$("#divContainerErstellen [type=radio]").checkboxradio();
+	$('#radio_group_neuesSpielErstellen').controlgroup("refresh");	 
+	 
+	 vorschau_map = getMapByName(button_name);
+	 drawRadarGesamt(vorschau_map);
+	 drawCanvasRadarOhneRaumschiffe(vorschau_map);
+	 
+	$('#erstellenButtonID').attr("disabled",false);
+}
+function addRadioButtonOffenesSpiel(spiel_id, map_name){
+	 $("#radio_group_spielBeitreten").append("<li><label for='" + spiel_id +"'>" + map_name + "</label><input type='radio' checked='checked' name='spielliste' id='"+spiel_id+"' value='"+spiel_id+"'></li>")
+	 
+	 $('#radio_group_spielBeitreten').change(function() {		
+			vorschau_map = getSpielByID($("input[name='spielliste']:checked").val()).map;	
+			drawRadarGesamt(vorschau_map);
+			drawCanvasRadarOhneRaumschiffe(vorschau_map);	
+	});	
+	
+	$("#divContainerBeitreten [type=radio]").checkboxradio();	
+	$('#radio_group_spielBeitreten').controlgroup("refresh");	 
+	 
+	$('#betretenButtonID').attr("disabled",false);
+}
+function addRadioButtonMauerart(button_name){
+	 $("#radio_group_mauerart").append("<li><label for='"+ button_name + "'>" + button_name + "</label><input type='radio' name='mauerart' id='"+button_name+"' value='"+button_name+"'></li>")
+	if (button_name == mauerart){
+		$(button_name).prop('checked',true);
+	}	 
+
+	$('#radio_group_mauerart').change(function() {		
+			mauerart = $("input[name='mauerart']:checked").val();
+			switch(mauerart){
+				case "Klassisch":
+									break;
+				case "Mondlandschaft":
+									MAUERBILD =  "hintergrundbilder/mond5.jpg"; 
+									imgMauer.src = MAUERBILD;
+									break;
+				case "Sternenhimmel":
+									MAUERBILD =  "hintergrundbilder/0702_sternenhimmel2_k.jpg"; 
+									imgMauer.src = MAUERBILD;
+									break;									
+				case "Future":
+									MAUERBILD =  "hintergrundbilder/kaviar3.jpg"; 
+									imgMauer.src = MAUERBILD;
+									break;
+				default:	
+									break;
+			}
+			zeichneGesamtMauer(meinSpiel.map);
+	});	 
+}
+	
+	
+function addRadioButtonHintergrund(button_name){
+
+	$("#radio_group_hintergrund").append("<li><label for='"+ button_name + "'>" + button_name + "</label><input type='radio' name='hintergrund' id='"+button_name+"' value='"+button_name+"'></li>")
+	if (button_name == hintergrund){
+		$(button_name).prop('checked',true);
+	}	 
+
+	 $('#radio_group_hintergrund').change(function() {		
+			hintergrund = $("input[name='hintergrund']:checked").val();
+			switch(hintergrund){
+				case "Klassisch":
+									break;
+				case "Sternenhimmel":
+									HINTERGRUNDBILD =  "hintergrundbilder/0702_sternenhimmel2_k.jpg"; 
+									imgHintergrund.src = HINTERGRUNDBILD;
+									break;
+				case "Kaviar":
+									HINTERGRUNDBILD =  "hintergrundbilder/IMG_5180.jpg";
+									imgHintergrund.src = HINTERGRUNDBILD;
+									break;
+				case "Mondlandschaft":
+									HINTERGRUNDBILD =  "hintergrundbilder/mond5.jpg"; 
+									imgHintergrund.src = HINTERGRUNDBILD;
+									break;
+				default:	
+									break;
+			}
+			zeichneGesamtHintergrund(meinSpiel.map);
+	});		
+}
+
+function getMapByName(name){
+        for (i = 0; i < map_liste.length; i++){
+        	if (name == map_liste[i].kartenname){
+        		return map_liste[i];
+        	}
+        }
+        return null;  // sollte nicht vorkommen
+}
+function getSpielByID(spiel_id){
+        for (i = 0; i < currentSpielListe.length; i++){
+        	if (spiel_id == currentSpielListe[i].spiel_id){
+        		return currentSpielListe[i];
+        	}
+        }
+        return null;  // sollte nicht vorkommen
+}
+function hauptmenueSchliessen(){
+	// Haupt-Menue und MessageBox unsichtbar machen, Button sichtbar
+	$("#hauptmenue").hide();
+	$("#adsbygoogle").hide();
+	$("#facebookButton").hide();
+	$("#f1").show();
+	$("#popupMessage").hide(); 
+}	
+function beitreten(){
+	meinSpiel = getSpielByID($("input[name='spielliste']:checked").val());
+	
+	sendSpielBeitreten();
+
+}
+function spielVerlassen(){
+	sendSpielVerlassen(meineID, meinSpiel.spiel_id);
+	//clearInterval(gameLoopNummer);
+	clearTimeout(timeOutID);
+	meinSpiel.spiel_id = "0"; // im Hauptmenue
+	
+	erzeugefremdeSpielerAusBasen();
+	log_liste = new Array();
+	
+	$( "#popupEinstellungen" ).popup( "close" ); // Popup-Menue schliesen
+	
+	// Haupt-Menue sichtbar machen
+	$("#hauptmenue").show();
+	$("#facebookButton").show();
+	$("#adsbygoogle").show();
+
+	meinSpiel.map = erzeugeLeereMap(feldgroesse);
+	meinRaumschiff.s = new koordinate(0, 0);
+	zeichneGesamtHintergrund(meinSpiel.map);
+	zeichneGesamtMauer(meinSpiel.map);
+	drawCanvasLeer();
+}
+
+function neuesSpielErstellen(){
+	
+	map = getMapByName($("input[name='mapliste']:checked").val());  // die globale Variable map wird gesetzt
+	fremdesRaumschiffArray = new Array();
+	
+	meinSpiel = new spiel(null, map);
+	sendNeuesSpielErstellen(meineID, map.kartenname);
+
+}
+
+function Fensterweite () {
+  if (window.innerWidth) {
+    return window.innerWidth;
+  } else if (document.body && document.body.offsetWidth) {
+    return document.body.offsetWidth;
+  } else {
+    return 0;
+  }
+}
+
+function Fensterhoehe () {
+  if (window.innerHeight) {
+    return window.innerHeight;
+  } else if (document.body && document.body.offsetHeight) {
+    return document.body.offsetHeight;
+  } else {
+    return 0;
+  }
+}
+
+/**
+ * Zum Spielstart soll Anhand der Fenstergroesse (Pixel-Hoehe * Pixel-Breite) eine geeignete Groesse eines Spielfeldquadrats
+ * sowie eine geeignete Groesse des Radar-Radius ermittelt werden.
+ * die feldgroesse soll dabei zwischen 30 und 45 liegen, die Radargroesse zwischen 35 und 50.
+ * Auf Mobilgeraeten wird es dadurch zu einer Feldgroesse von 30 kommen.
+ * 
+ * Der Benutzer kann beides manuell anpassen. Bei einer Änderung der Fenstergroesse während des Spiels soll kein automatischer Abgleich stattfinden.
+ */
+function  ermittleFeldgroesse(){
+  var anzahlBildpunkteAktuell = Fensterhoehe() * Fensterweite();
+  var a = (45-30) / (1440000-480000);
+  feldgroesse_view =  anzahlBildpunkteAktuell*a + 45-(1440000*a);
+  
+  if (feldgroesse_view < 30){
+	feldgroesse_view = 30;
+  }
+  if (feldgroesse_view > 45){
+	feldgroesse_view = 45;
+  }  
+  feldgroesse_view_faktor = feldgroesse_view / feldgroesse;
+  
+  
+  a = (50-35) / (1440000-480000);
+  radarKreisRadius_maximum_aktuell = anzahlBildpunkteAktuell*a + 50-(1440000*a);
+  if (radarKreisRadius_maximum_aktuell < 35){
+	radarKreisRadius_maximum_aktuell = 35;
+  }
+  if (radarKreisRadius_maximum_aktuell > 50){
+	radarKreisRadius_maximum_aktuell = 50;
+  }  
+  $("#zoom_slider").val(feldgroesse_view).slider("refresh");
+  $("#radar_slider").val(radarKreisRadius_maximum_aktuell).slider("refresh");
+
+}
+function bildNeuAufbau () {
+	
+	js_bild_breite_aktuell = Fensterweite ();	
+	js_bild_hoehe_aktuell = Fensterhoehe ();
+	
+	var canvas = document.getElementById('canvas_Spielfeld');
+
+	canvas.width = js_bild_breite_aktuell ;
+	canvas.height = js_bild_hoehe_aktuell - 5;
+												
+	setzeMenuePosition();
+}
+
+function vollbild() {
+	
+	var element = document.getElementsByTagName("body")[0];
+
+	if (element.requestFullscreen) {	//# Opera 12
+		console.info("Opera 12");
+		if (!document.fullscreenElement) {
+			element.requestFullscreen();
+		
+		}
+		else {
+			document.exitFullscreen();
+		}
+	}
+	else if (element.mozRequestFullScreen) {
+		console.info("Mozilla");
+		if (!document.mozFullScreen) {
+			element.mozRequestFullScreen();
+		}
+		else {
+			document.mozCancelFullScreen();	
+		}
+	} else if (element.webkitRequestFullScreen) {	//# Opera 15, Chrome
+		console.info("Webkit (Opera 15, Chrome)");
+		if (!document.webkitIsFullScreen) {
+			element.webkitRequestFullScreen();
+		}
+		else {
+			document.webkitCancelFullScreen();
+		}
+	}
+	bildNeuAufbau ();
+	
+}
+
+function exitFullscreen() {
+  if(document.exitFullscreen) {
+    document.exitFullscreen();
+  } else if(document.mozCancelFullScreen) {
+    document.mozCancelFullScreen();
+  } else if(document.webkitExitFullscreen) {
+    document.webkitExitFullscreen();
+  }
+}
+
+/**
+ * Das Hauptmenue wird unterschiedlich positioniert. Wenn der Bildbereich breiter als höher ist, dann werden die beiden Menue's "Erstellen" und
+ * "Beitreten" nebeneinander dargestellt, sonst untereinander
+ */
+function setzeMenuePosition(){
+  var linkerRand;
+  var obererRand;
+  var erstellenMenueBereich = document.getElementById('erstellenMenue');
+  var beitretenMenueBereich = document.getElementById('beitretenMenue');
+  var menueBreite = 250;
+  var menueHoehe = 300; // koennte varieren, vertikal muss das Menue aber nicht unbedingt zentriert sein
+  
+  erstellenMenueBereich.style.width = menueBreite + "px";
+  beitretenMenueBereich.style.width = menueBreite + "px";
+
+  
+  
+  
+  
+  if (Fensterweite() > Fensterhoehe() && Fensterweite() > 2*menueBreite+10){
+	erstellenMenueBereich.style.float = "left";
+	beitretenMenueBereich.style.float = "left";
+	
+	beitretenMenueBereich.style.margin = "0px 0px 0px 70px";
+	linkerRand = (Fensterweite() - 2* menueBreite - 70) / 2;
+	
+	obererRand = (Fensterhoehe() - menueHoehe) / 2;
+  }
+  else{
+	erstellenMenueBereich.style.float = "none";
+	beitretenMenueBereich.style.float = "none";
+	beitretenMenueBereich.style.margin = "80px 0px 0px 0px";
+	linkerRand = (Fensterweite() - menueBreite ) / 2;
+	obererRand = (Fensterhoehe() - 2 * menueHoehe - 120) / 2;
+  }
+
+  if (linkerRand < 10){
+	linkerRand = 10;
+  }
+  
+  if (obererRand < 10){
+	obererRand = 10;
+  }
+  var menueBereich = document.getElementById('hauptmenue');
+  
+  menueBereich.style.left = linkerRand+"px";
+  menueBereich.style.top = obererRand+"px";
+  menueBereich.style.position = "absolute";
+  
+}
+
+
+/* Überwachung von Netscape initialisieren */
+if (document.body && window.innerWidth) {
+  window.onresize = bildNeuAufbau;
+}	
+
+
+function showModalWindow(){
+     window.showModalDialog("startDialog.html",
+           "","resizable: yes");
+}
+
+function hexFromRGB(r, g, b) {
+    var hex = [
+      r.toString( 16 ),
+      g.toString( 16 ),
+      b.toString( 16 )
+    ];
+    $.each( hex, function( nr, val ) {
+      if ( val.length === 1 ) {
+        hex[ nr ] = "0" + val;
+      }
+    });
+    return hex.join( "" ).toUpperCase();
+  }
+function refreshSwatch() {
+  	
+    var red = $( "#red" ).val(),
+      green = $( "#green" ).val(),
+      blue = $( "#blue" ).val(),
+      hex = hexFromRGB( red, green, blue );
+      
+      switch ($("select").val()){
+      	case "0": 
+					      if (typeof(meinRaumschiff) != "undefined"){
+					      	meinRaumschiff.farbe = "rgb(" + red.toString() + ", " + green.toString() + ", " + blue.toString() + ")";
+					      }
+					      break;
+				case "1":
+								untergrundfarbe =  "rgb(" + red.toString() + ", " + green.toString() + ", " + blue.toString() + ")";
+								if (meinSpiel.spiel_id == "0"){
+										drawRadarGesamt(vorschau_map);
+										drawCanvasRadarOhneRaumschiffe(vorschau_map);	
+								} else{
+									drawRadarGesamt(meinSpiel.map);
+									drawCanvasRadar(meinSpiel.map);
+								}
+								
+								break;
+				case "2":
+								mauerfarbe = "rgb(" + red.toString() + ", " + green.toString() + ", " + blue.toString() + ")";
+
+								if (meinSpiel.spiel_id == "0"){
+										drawRadarGesamt(vorschau_map);
+										drawCanvasRadarOhneRaumschiffe(vorschau_map);	
+								} else{
+									drawRadarGesamt(meinSpiel.map);
+									drawCanvasRadar(meinSpiel.map);
+									zeichneGesamtHintergrund(meinSpiel.map);
+									zeichneGesamtMauer(meinSpiel.map);
+								}
+								
+								break;
+				default:
+								break;
+			}
+		var c = document.getElementById("farbRechteck");
+		var ctx = c.getContext("2d");
+		ctx.fillStyle = "rgb(" + red.toString() + ", " + green.toString() + ", " + blue.toString() + ")";
+		ctx.fillRect(0,0,300,30);
+}
+
+$("#sound_slider").ready(function(){
+	$("#sound_slider").val(grundlautstaerke).slider("refresh");
+	
+});
+
+$("#autopilot_slider").ready(function(){
+	$("#autopilot_slider").val(autopilotOnOff).slider("refresh");
+	
+});
+
+$("#zoom_slider").ready(function(){
+	$("#zoom_slider").val(feldgroesse_view).slider("refresh");
+	
+});
+
+
+
+
+
+$("#radar_slider").ready(function(){
+	$("#radar_slider").val(radarKreisRadius_maximum_aktuell).slider("refresh");
+	
+});
+
+$("#red").ready(function(){
+	switch ($("select").val()){
+		      	case "0": 
+						      	$("#red").val(red_raumschiff).slider("refresh");
+							    break;
+				case "1":
+								$("#red").val(red_hintergrund).slider("refresh");
+										break;
+				case "2":				
+								$("#red").val(red_mauer).slider("refresh");
+										break;
+
+		    	}
+});
+$("#green").ready(function(){
+	switch ($("select").val()){
+		      	case "0": 
+						      	$("#green").val(green_raumschiff).slider("refresh");
+							    break;
+				case "1":
+								$("#green").val(green_hintergrund).slider("refresh");
+										break;
+				case "2":				
+								$("#green").val(green_mauer).slider("refresh");
+										break;
+
+		    	}
+});
+$("#blue").ready(function(){
+	switch ($("select").val()){
+		      	case "0": 
+						      	$("#blue").val(blue_raumschiff).slider("refresh");
+							    break;
+				case "1":
+								$("#blue").val(blue_hintergrund).slider("refresh");
+										break;
+				case "2":				
+								$("#blue").val(blue_mauer).slider("refresh");
+										break;
+
+		    	}
+});
+
+
+
+$(function() {
+    $( "#red" ).slider();
+    $( "#green" ).slider();
+    $( "#blue" ).slider();
+    $( "#red" ).css( "background-color", "#ef2929" );
+    $( "#green" ).css( "background-color", "#8ae234" );
+    $( "#blue" ).css( "background-color", "#729fcf" );
+
+    refreshSwatch();
+
+
+	$('#red, #green, #blue').on('change', function(){
+	  refreshSwatch();
+	});
+	
+	$('#sound_slider').on('change', function(){
+		grundlautstaerke = parseInt($("#sound_slider").val());
+	});
+	$('#autopilot_slider').on('change', function(){
+		autopilotOnOff = parseInt($("#autopilot_slider").val());
+		if (autopilotOnOff == 0){
+			taste_rechts = 0;
+			taste_links = 0;
+			taste_schub = 0;
+			taste_schuss = 0;
+			drehwinkel_aktuell = 0; 
+			taste_gravitation = 0; 			
+		}
+	});
+	$('#radar_slider').on('change', function(){
+		radarKreisRadius_maximum_aktuell = parseInt($("#radar_slider").val());
+	});
+	$('#zoom_slider').on('change', function(){
+		zoomSpielfeld( parseInt($("#zoom_slider").val()));
+	});
+		
+    /**
+     * Wenn in der Combobox ein neuer Wert ausgewaehlt wird, sollen die Farb-Balken(sliders) der ausgewaehlten Farbe entsprechen.
+     */
+    $("select").change(function() {
+		    var rgb_farbe;
+		    switch ($("select").val()){
+		      	case "0": 
+						      	rgb_farbe = meinRaumschiff.farbe;
+							      break;
+						case "1":
+										rgb_farbe = untergrundfarbe;
+										break;
+						case "2":				
+										rgb_farbe = mauerfarbe;
+										break;
+						default:
+										rgb_farbe = "rgb(0, 0, 0)";
+										break;
+		    }
+		    	
+		    // parts sieht folgendermassen aus ["rgb(red, green, blue", "red", "green", "blue"]
+		    var parts = rgb_farbe.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+		    			 
+			$("#red").val(parts[1]).slider("refresh");		    			 
+			$("#green").val(parts[2]).slider("refresh");		    			 
+			$("#blue").val(parts[3]).slider("refresh");		    			 
+			refreshSwatch();
+	});
+});
+
+
+function zoomSpielfeldUndSlider(feldGroesseNeu){
+	zoomSpielfeld(feldGroesseNeu);
+    $("#zoom_slider").val(feldgroesse_view).slider("refresh");
+}
+
+function zoomSpielfeld(feldGroesseNeu){
+			if (feldGroesseNeu > maxZoomgroesse){
+				feldGroesseNeu = maxZoomgroesse;
+			}
+			if (feldGroesseNeu < minZoomgroesse){
+				feldGroesseNeu = minZoomgroesse;
+			}
+						
+			feldgroesse_view = feldGroesseNeu;
+			feldgroesse_view_faktor = feldgroesse_view / feldgroesse;
+
+			zeichneGesamtMauer(meinSpiel.map);
+			zeichneGesamtHintergrund(meinSpiel.map);
+			
+
+}
+
+function zoomRadar(faktor){
+  faktor = (faktor-1)*0.1 +1;
+  radarKreisRadius_maximum_aktuell *= faktor;
+  if (radarKreisRadius_maximum_aktuell < 20) {
+	radarKreisRadius_maximum_aktuell = 20;
+  }
+  if (radarKreisRadius_maximum_aktuell > 100) {
+	radarKreisRadius_maximum_aktuell = 100;
+  } 
+  
+}
+
+function focusAufSpielfeld(){
+        $(canvas_Spielfeld).focus();
+};
+
+function log(spieler_id,  text, with_newLine ) {
+
+	
+	var neuerLogEintrag = new Array(text, spieler_id, with_newLine, LOG_DAUER_INITIAL);
+	log_liste.push(neuerLogEintrag);
+
+}
+
+/** 
+ * Das Array fremdesRaumschiffArray wird neu erstellt mit allen Basen der Spieler, die sich im selben Spiel befinden. (Menue = Spiel mit Id = 0)
+ */
+function erzeugefremdeSpielerAusBasen(){
+	fremdesRaumschiffArray = new Array();
+
+	for (i = 0; i < currentBasenArray.length; i++){
+		if (currentBasenArray[i].spielerID != meineID){  // die eigene Basis wird extra behandelt und kommt nicht ins Array fremdesRaumschiffArray	
+			if (meinSpiel.spiel_id == currentBasenArray[i].spiel_ID){
+				erzeugeFremdenSpieler(currentBasenArray[i]);
+			}
+		}
+	}
+}
+
+
+function starteSpiel(){				    
+			
+	drawRadarGesamt(meinSpiel.map);
+	drawCanvasRadar(meinSpiel.map);
+	    
+	// startet regelmaessig alle TIMEOUT Millisekunden die eigentliche Spielschleife
+	// setInterval ist so intelligent, von TIMEOUT die Dauer des letzten gameLoop - Aufrufs abzuziehen
+	//gameLoopNummer = window.setInterval(gameLoop, TIMEOUT);
+	
+	
+	gameLoop();
+	
+}	
+
+/**
+ * Es wird geprueft, ob die uebergebene spiel_id in der currentSpielListe enthalten ist, und gegebenenfalls true zureuckgegeben, sonst false.
+ */
+function existiertSpiel(spiel_id){
+      for (var j = 0; j < currentSpielListe.length; j++){
+      	if (spiel_id == currentSpielListe[j].spiel_id){
+      		return true;
+      	}
+      }
+      return false;
+}
+function erzeugeFremdenSpieler(neueBasis){
+    meinSpiel.weiseBasisZu(neueBasis);
+	var neuesFremdesRaumschiff = new raumschiff(neueBasis, "0", "0", "0", "SHIP3");		                            
+	fremdesRaumschiffArray.push(neuesFremdesRaumschiff);
+		
+}
+function entferneSpielerAusSpiel(id){
+	meinSpiel.setBasisLeer(id);
+	entferneFremdesRaumschiff(id);	
+}
+
+function mouseStart(evt) {
+		evt.preventDefault();
+
+		global_mouse_x = evt.pageX;
+		global_mouse_y = evt.pageY;		
+
+		mouse_down = true;
+}
+
+function ladeAlleRaumschiffImages(){
+
+	for (i = 0; i < alleRaumschiffTypen.length; i++){
+		var imgRaumschiff = new Image();
+		imgRaumschiff.src = "raumschiffbilder/"+alleRaumschiffTypen[i]+".png";
+		alleRaumschiffBilder.push({image:imgRaumschiff, typ:alleRaumschiffTypen[i]});
+	}
+
+}
+
+function handleStart(event) {
+	event.preventDefault();
+	global_touches = event.touches;
+
+	touch_down = true;
+}
+
+$(window).bind('mousewheel DOMMouseScroll', function(event){
+    if (event.originalEvent.wheelDelta > 0 || event.originalEvent.detail < 0) {
+        zoomSpielfeldUndSlider(1.1 * feldgroesse_view);
+    }
+    else {
+        zoomSpielfeldUndSlider(0.9 * feldgroesse_view);
+    }
+});
+
+</script>
+
+
+<script>
+	$(document).onfocus = function(){
+		$(canvas_Spielfeld).focus();			
+	};
+</script>
+
+
+</head>
+
+  <body class="ui-widget-content" style="border: 0;">
+
+  <div id="fb-root"></div>
+  
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/de_DE/sdk.js#xfbml=1&version=v2.3&appId=535251043171290";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+<script>  
+	document.createElement('popupEinstellungen');  			
+</script>
+
+
+
+<script>
+function erzeugeMenue(){
+		$( "#erstellenButtonID" ).listview({ disabled: true });
+		$( "#betretenButtonID" ).listview({ disabled: true });
+
+		$('#radio_group_neuesSpielErstellen').children().remove();
+        for (i = 0; i < map_liste.length; i++){
+			addRadioButtonMap(map_liste[i].kartenname);
+        }
+		$('#radio_group_spielBeitreten').children().remove();
+        for (i = 0; i < currentSpielListe.length; i++){
+			addRadioButtonOffenesSpiel(currentSpielListe[i].spiel_id, currentSpielListe[i].map.kartenname);
+        }
+
+		$('#radio_group_raumschiffTyp').children().remove();
+		 for (var i = 0; i < alleRaumschiffTypen.length; i++){
+			addRadioButtonGrafikRaumschiffTyp(alleRaumschiffTypen[i]);
+        }
+		 for (var j = 0; j < alleClassicRaumschiffTypen.length; j++){
+			addRadioButtonClassicRaumschiffTyp(alleClassicRaumschiffTypen[j]);
+        }
+
+		$('#radio_group_mauerart').children().remove();
+		addRadioButtonMauerart("Klassisch");
+		addRadioButtonMauerart("Future");
+		addRadioButtonMauerart("Sternenhimmel");
+		addRadioButtonMauerart("Mondlandschaft");
+		$('#radio_group_hintergrund').children().remove();
+		addRadioButtonHintergrund("Klassisch");
+		addRadioButtonHintergrund("Sternenhimmel");
+		addRadioButtonHintergrund("Mondlandschaft");
+		addRadioButtonHintergrund("Kaviar");
+}
+
+</script>
+  	<div data-role="page" id="page1" >
+
+
+
+    	<script type="text/javascript">
+				ladeAlleRaumschiffImages();
+		
+				document.writeln('<canvas id="canvas_SpielfeldGesamt" width="30000" height="30000" style="');
+				document.writeln('position:absolute; top:-40000px; left:0px;  visibility: hidden;  z-index: 0; solid #c3c3c3;">');
+				document.writeln('Your browser does not support the canvas element.');
+			  	document.writeln('</canvas>');
+
+			  	$("#canvas_SpielfeldGesamt").attr("contentEditable", "true")
+				$("#canvas_SpielfeldGesamt")[0].contentEditable = true;
+				
+				var canvasString;				
+				for (raumschiffNr = 1; raumschiffNr < 20; raumschiffNr++)
+				{
+					canvasString = '<canvas id=\"canvas_Raumschiff_'+raumschiffNr+'\" width=\"100\" height=\"100\" style=\"';
+					
+					document.writeln(canvasString);
+					
+					document.writeln('position:absolute; top:100px; left:100px;  visibility: visible;  z-index: 0; solid #c3c3c3;">');
+					document.writeln('Your browser does not support the canvas element.');
+					document.writeln('</canvas>');
+					
+				
+				}
+
+
+				document.writeln('<canvas id="canvas_MauerGesamt" width="60000" height="60000" style="');
+				document.writeln('position:absolute; top:-80000px; left:0px;  visibility: hidden;  z-index: 0; solid #c3c3c3;">');
+				document.writeln('Your browser does not support the canvas element.');
+			  	document.writeln('</canvas>');
+
+			  	$("#canvas_MauerGesamt").attr("contentEditable", "true")
+				$("#canvas_MauerGesamt")[0].contentEditable = true;
+	    		
+				document.writeln('<canvas id="canvas_Spielfeld" width="2000" height="2000" style="');
+				document.writeln('float:left; margin-right:10px;  visibility: visible;  z-index: 0; solid #c3c3c3;">');
+				document.writeln('Your browser does not support the canvas element.');
+			  	document.writeln('</canvas>');
+			  	
+			  	$("#canvas_Spielfeld").attr("contentEditable", "true")
+				$("#canvas_Spielfeld")[0].contentEditable = true;
+         	
+	</script> 
+
+		<div align="right" >				
+			<canvas id="canvas_Radar" width="200" height="200" style="border-width:0px; padding:0px; position:absolute; top:10px; right:10px">  
+						Your browser does not support the canvas element.
+				</canvas>	
+		</div> 	
+		<div id="f1">
+				<a href="#popupEinstellungen" data-rel="popup" data-role="button" data-icon="grid" data-iconpos="notext" data-theme="a" data-inline="true">Menue</a>
+		</div>    
+				
+		<canvas id="canvas_radar_gesamt" width="1200" height="1200" 
+	
+				style=" 
+				position:absolute; top:-1200px; left:0px;  visibility: hidden;  z-index: 0; solid #c3c3c3;">
+					
+	
+			Your browser does not support the canvas element.
+		</canvas>
+		<audio id="audio_sprite" preload="none">	
+			  <source src="jojoBattlePilot_gesamtSound.wav" type="audio/wav">		
+			  <source src="jojoBattlePilot_gesamtSound.mp3" type="audio/MPEG">
+			  Your browser does not support the audio element.
+		</audio>
+
+		<audio id="sound_schuss" preload="none">
+			  <source src="44MAG.WAV" type="audio/wav">
+			  <source src="44MAG.mp3" type="audio/MPEG">
+			  Your browser does not support the audio element.
+		</audio>
+
+		<audio id="sound_explosion" preload="none">
+			  <source src="explosion.wav" type="audio/wav">
+			  <source src="explosion.mp3" type="audio/MPEG">
+			  Your browser does not support the audio element.
+		</audio>
+
+		<audio id="sound_abprallen" preload="none">
+			  <source src="karate_kid_punch.wav" type="audio/wav">
+			  <source src="karate_kid_punch.mp3" type="audio/MPEG">
+			  Your browser does not support the audio element.
+		</audio>
+		<audio id="sound_schub" preload="none">
+			  <source src="xwingloop.wav" type="audio/wav">
+			  <source src="xwingloop.mp3" type="audio/MPEG”">
+			  Your browser does not support the audio element.			  
+		</audio>	
+		<audio id="sound_gravitationsWelle" preload="none">
+			  <source src="gravitationsWelle.wav" type="audio/wav">
+			  <source src="gravitationsWelle.mp3" type="audio/MPEG">
+			  Your browser does not support the audio element.
+		</audio>		
+	
+	
+		
+		<script type="text/javascript">
+
+				
+			$("login-dialog").ready(function()
+			{
+				// reagieren, wenn im anmeldeDialog eine taste gedrückt wurde
+				//var anmeldeDialog = document.getElementById('Anmelde-Dialog');  
+				$( "#nickname" ).keydown(function(e) {
+				
+					dialogTastegedrueckt(e);
+				
+				});	
+			});
+			$(document).on("pageshow","#login-dialog",function(){
+			  $("#nickname").focus();
+			});
+			
+			/**
+			 * Wenn auf den Chat-Menuepunkt geklickt wurde, dann soll das Texteingabefeld den Fokus bekommen
+			 */
+			$("#popupEinstellungen").on("popupafterclose", function() {
+				if ($("#popupMessage").is(":visible")){
+					$("#message").focus(); 
+				}
+			});		
+				
+				
+			$(document).ready(function()
+			{
+				
+				ermittleFeldgroesse();
+				meinRaumschiff.farbe = "rgb(" + red.toString() + ", " + green.toString() + ", " + blue.toString() + ")";
+			
+			    // Focus im canvas setzen
+			    $(canvas_Spielfeld).focus();
+		
+				var canvas = document.getElementById('canvas_Spielfeld');
+				canvas.addEventListener("touchstart", function(event) {	
+					event.preventDefault();
+					handleStart(event);
+				});
+				canvas.addEventListener("touchmove", function(event) {
+					event.preventDefault();
+					handleStart(event);
+				});						
+				canvas.addEventListener("touchend", function(event) {
+						touch_down = false;
+						taste_rechts = 0;
+						taste_links = 0;
+						taste_schub = 0;
+						taste_schuss = 0;
+						drehwinkel_aktuell = 0;
+				});
+				
+				canvas.addEventListener("mousedown", function(event) {
+					mouseStart(event);
+				});
+				canvas.addEventListener("mousemove", function(event) {
+					if (mouse_down == true){
+						mouseStart(event);
+					}
+				});						
+				canvas.addEventListener("mouseup", function(event) {
+						mouse_down = false;
+						taste_rechts = 0;
+						taste_links = 0;
+						taste_schub = 0;
+						taste_schuss = 0;
+						drehwinkel_aktuell = 0;
+				});	
+				canvas.addEventListener("mouseleave", function(event) {
+						if (mouse_down == true){
+							taste_rechts = 0;
+							taste_links = 0;
+							taste_schub = 0;
+							taste_schuss = 0;
+							drehwinkel_aktuell = 0;
+						}
+				});					
+				
+				setzeMenuePosition();
+				meinSpiel.map = erzeugeLeereMap(feldgroesse);
+				
+				zeichneGesamtHintergrund(meinSpiel.map);
+				zeichneGesamtMauer(meinSpiel.map);
+				drawCanvasLeer();	
+				// reagieren, wenn im spielfeld eine taste gedrückt wurde
+				// 'pe' ist die gedrückte taste...
+				$(canvas_Spielfeld).keydown(function(e) {
+					  e.preventDefault();// scrollen durch Pfeiltasten unterdruecken 
+				
+						tastegedrueckt(e.which);
+				
+				});
+
+				// reagieren, wenn im spielfeld eine taste losgelassen wurde
+				// 'e' ist die gedrückte taste...
+				$(canvas_Spielfeld).keyup(function(e) {
+						 e.preventDefault(); // scrollen durch Pfeiltasten unterdruecken
+				
+							tastelosgelassen(e.which);
+				
+				});
+				$('#message').keypress(function(e) {
+					if ( e.keyCode == 13){
+						if (this.value ) {
+							log ( meineID, 'You: ' + this.value, true );
+							sendMessage( this.value);
+						}			
+						$(this).val('');
+						$( "#popupMessage" ).hide(); 
+						$(canvas_Spielfeld).focus();
+					}
+				});
+				
+				// Fehler in Chrome bei jquery 1.3: bei changePage wird Dialog nur kurz angezeigt und verschwindet wieder. Workaround: setTimeout als Workaround
+				// funktioniert nicht immer. Deshalb wird kein Dialog (role: 'dialog') aufgerufen, sondern eine page, und die Dialogbox wird manuel positioniert.
+				// ChangePage ist im uebrigen deprecated und wird ab jquery 1.4 mit  "$( "body" ).pagecontainer( "change", ..." funktionieren.
+				/***
+				setTimeout(function () {
+					$.mobile.changePage('#login-dialog', {transition: 'slide', role: 'dialog', allowSamePageTransition: true, changeHash: true}); 
+				}, 800);
+				***/
+				$.mobile.changePage('#login-dialog', {transition: 'slide', allowSamePageTransition: true, changeHash: true}); 
+
+				
+				 $('#nick_ok').click(function(){					
+						meinName = $( "#nickname" ).val();
+						if (!meinName.length > 0){
+							return false;
+						}
+						else{
+							$.mobile.changePage('#page1', {allowSamePageTransition: true, changeHash: false}); 
+						
+							// In den meisten Browsern ausser Firefox funktioniert auf Mobil-Geraeten das Laden von Sound-Dateien nicht per preload,
+							// sondern nur wenn ein Button vorher gedrueckt wurde
+							ladeSoundDatei();
+							vollbild();
+							
+							createServerConnection();
+						}				
+					
+				}); 
+				var hammerSpielfeld = new Hammer(document.getElementById('canvas_Spielfeld'));
+				hammerSpielfeld.add(new Hammer.Pinch({ threshold: 0 })).recognizeWith([hammerSpielfeld.get('pan')]);
+
+
+				hammerSpielfeld.on("pinchstart pinchmove", onPinchSpielfeld);
+
+				function onPinchSpielfeld(ev) {
+					// nur zoomen, wenn nicht gerade eine andere Aktion (Knopfdruck, schub) durchgefuehrt worden ist
+					if (touchInButtonNaehe == false){
+						faktor = (ev.scale-1)*0.1 +1;
+						zoomSpielfeldUndSlider(faktor * feldgroesse_view);
+					}
+				}
+				
+				var hammerRadar = new Hammer(document.getElementById('canvas_Radar'));
+				hammerRadar.add(new Hammer.Pinch({ threshold: 0 })).recognizeWith([hammerRadar.get('pan')]);
+
+
+				hammerRadar.on("pinchstart pinchmove", onPinchRadar);
+
+				function onPinchRadar(ev) {
+					zoomRadar(ev.scale);
+					drawCanvasRadar(meinSpiel.map);
+				}
+			});
+			</script>
+
+		<script type="text/javascript">
+				/* Überwachung von Internet Explorer initialisieren */
+				if (document.body && document.body.offsetWidth) {
+				  window.onresize = bildNeuAufbau;
+				}
+		</script>
+		<div data-role="popup" id="popupMessage" data-position-to="document" data-theme="none" style="width:600px; line-height:20px;bottom:30px; position:fixed; margin-left: -300px;left: 50%;">  
+			<input type='text' id='message' name='message' />
+		</div>
+		<div data-role="popup" id="popupEinstellungen" data-theme="none"  onmouseout="focusAufSpielfeld()" >  
+					<div data-role="collapsible-set" data-theme="b" data-content-theme="c" style="margin:0; width:250px;">
+						<ul data-role="listview" data-inset="true" style="min-width:210px;" data-theme="b">
+							<li><a href="javascript:oeffneChatFenster()" >Chat  [Enter]</a></li> 
+							<div data-role="collapsible" data-inset="false" data-collapsed-icon="arrow-r" data-iconpos="right" data-expanded-icon="arrow-d" >
+								<h2>Einstellungen</h2>
+								<ul data-role="listview" >
+									<li><a href="#popupDialogRaumschiff" data-rel="popup" data-position-to="window" data-inline="true" data-transition="pop">Raumschiff</a></li>								
+									<li><a href="#popupDialogFarbe" data-rel="popup" data-position-to="window" data-inline="true" data-transition="pop">Farbe</a></li>
+									<li><a href="#popupDialogSound" data-rel="popup" data-position-to="window" data-inline="true" data-transition="pop" >Sound</a></li>
+									<li><a href="#popupDialogMauer" data-rel="popup" data-position-to="window" data-inline="true" data-transition="pop">Mauerart</a></li>								
+									<li><a href="#popupDialogHintergrund" data-rel="popup" data-position-to="window" data-inline="true" data-transition="pop">Hintergrund</a></li>								
+									<li><a href="#popupDialogAutopilot" data-rel="popup" data-position-to="window" data-inline="true" data-transition="pop" >Autopilot</a></li>
+								</ul>
+							</div>
+							<div data-role="collapsible" data-inset="false" data-collapsed-icon="arrow-r" data-iconpos="right" data-expanded-icon="arrow-d" >
+								<h2>Zoom</h2>
+								<ul data-role="listview" >
+									<li><a href="#popupDialogZoom" data-rel="popup" data-position-to="window" data-inline="true" data-transition="pop" modal="true">Spielfeld</a></li>
+									<li><a href="#popupDialogRadar" data-rel="popup" data-position-to="window" data-inline="true" data-transition="pop" modal="true">Radar</a></li>
+									<li><a href="javascript:vollbild()" >Vollbildschirm   an/aus</a></li>
+								</ul>
+							</div>							
+							<div data-role="collapsible" data-inset="false" data-collapsed-icon="arrow-r" data-iconpos="right" data-expanded-icon="arrow-d" >
+								<h2>Info</h2>
+								<ul >
+									<li><a>Autor: Robert Keck</a></li>
+									<li><a>Datum: 04/2016</a></li>
+									<li><a>Version: <?php echo $version;?></a></li>
+								</ul>
+
+							</div>							
+							<li><a href="javascript:spielVerlassen()" >Zurueck ins Hauptmenue</a></li>
+							<li><a href="#page1" >Weiterspielen</a></li>
+						</ul>		
+					</div><!-- /collapsible -->			
+		</div>
+		<div data-role="popup" id="popupDialogRaumschiff" data-overlay-theme="a" data-theme="c" style="max-width:400px; left:-150px" class="ui-corner-all" onmouseout="focusAufSpielfeld()">
+			<div data-role="header" data-theme="a" class="ui-corner-top">
+				<h1>Typ</h1>
+			</div>
+			
+			<div data-role="content"  >
+			
+					<div data-role="controlgroup" id="radio_group_raumschiffTyp" >	
+					</div>		
+
+			 </div>
+			 <div data-role="footer" align="center">
+				<a href="#page1">Ok</a>
+			 </div>  			
+			
+		</div>
+		<div data-role="popup" id="popupDialogMauer" data-overlay-theme="a" data-theme="c" style="max-width:400px;" class="ui-corner-all" onmouseout="focusAufSpielfeld()">
+			<div data-role="header" data-theme="a" class="ui-corner-top">
+				<h1>Mauerart</h1>
+			</div>
+			
+			<div data-role="content"  >
+			
+					<div data-role="controlgroup" id="radio_group_mauerart" >	
+					</div>		
+
+			 </div>
+			 <div data-role="footer" align="center">
+				<a href="#page1">Ok</a>
+			 </div>  			
+			
+		</div>
+		<div data-role="popup" id="popupDialogHintergrund" data-overlay-theme="a" data-theme="c" style="max-width:400px;" class="ui-corner-all" onmouseout="focusAufSpielfeld()">
+			<div data-role="header" data-theme="a" class="ui-corner-top">
+				<h1>Hintergrund</h1>
+			</div>
+			
+			<div data-role="content"  >
+			
+					<div data-role="controlgroup" id="radio_group_hintergrund" >	
+					</div>		
+
+			 </div>
+			 <div data-role="footer" align="center">
+				<a href="#page1">Ok</a>
+			 </div>  			
+			
+		</div>	
+		<div data-role="popup" id="popupDialogFarbe" data-theme="c" style="max-width:400px; top:0px;" class="ui-corner-all" onmouseout="focusAufSpielfeld()">
+			<div data-role="header" data-theme="a" class="ui-corner-top">
+				<h1>Farbeinstellungen</h1>
+			</div>
+			<div data-role="content" data-theme="d" class="ui-corner-bottom ui-content" id="farbwahl-combobox">
+				<select >
+					  <option value="0">Raumschifffarbe aendern</option>
+					  <option value="1">RadarHintergrund aendern</option>
+					  <option value="2">Mauerfarbe aendern</option>
+				</select>
+
+				<input type="range" name="red" id="red" min="0" max="255" background="#8ae234" />
+				<input type="range" name="green" id="green" min="0" max="255" background="#8ae234" />
+				<input type="range" name="blue" id="blue" min="0" max="255" background="#729fcf" />
+				<canvas id="farbRechteck" width="300" height="30"></canvas>
+
+			 </div>
+			 <div data-role="footer" align="center" >
+				<a href="#page1">Ok</a>
+			 </div>  		
+		</div>
+
+		
+		<div data-role="popup" id="popupDialogSound" data-theme="c" style="max-width:400px; width:300px;  top:0px" class="ui-corner-all" onmouseout="focusAufSpielfeld()">
+			<div data-role="header" data-theme="a" class="ui-corner-top">
+				<h1>Sound</h1>
+			</div>
+			<div data-role="content" data-theme="d" class="ui-corner-bottom ui-content">
+
+				<input type="range" name="sound_slider" id="sound_slider" min="0" max="10" width="300" />    
+			</div>
+			 <div data-role="footer" align="center">
+				<a href="#page1">Ok</a>
+			 </div>  			
+
+		</div>	
+		<div data-role="popup" id="popupDialogAutopilot" data-theme="c" style="max-width:400px; width:300px;  top:0px" class="ui-corner-all" onmouseout="focusAufSpielfeld()">
+			<div data-role="header" data-theme="a" class="ui-corner-top">
+				<h1>Autopilot on/off</h1>
+			</div>
+			<div data-role="content" data-theme="d" class="ui-corner-bottom ui-content">
+
+				<input type="range" name="autopilot_slider" id="autopilot_slider" min="0" max="1" width="300" />    
+			</div>
+			 <div data-role="footer" align="center">
+				<a href="#page1">Ok</a>
+			 </div>  			
+
+		</div>	
+		<div data-role="popup" id="popupDialogZoom" data-theme="c" style="max-width:400px; width:300px;  top:0px" class="ui-corner-all" onmouseout="focusAufSpielfeld()">
+			<div data-role="header" data-theme="a" class="ui-corner-top">
+				<h1>Zoom</h1>
+			</div>
+			<div data-role="content" data-theme="d" class="ui-corner-bottom ui-content">
+			<script>
+				//document.writeln('<input type=\"range\" name=\"zoom_slider\" id=\"zoom_slider\" min=\"'+minZoomgroesse+'\" max=\"'+maxZoomgroesse+'\"	width=300 />');    
+				//<input type="range" name="zoom_slider" id="zoom_slider" min=minZoomgroesse max=maxZoomgroesse	width="300" />    
+			</script>
+			<input type="range" name="zoom_slider" id="zoom_slider" min="25" max="200"	width="300" />    
+			</div>
+			 <div data-role="footer" align="center">
+				<a href="#page1">Ok</a>
+			 </div>  			
+
+		</div>			
+		<div data-role="popup" id="popupDialogRadar" data-theme="c" style="max-width:400px; width:300px;  top:0px" class="ui-corner-all" onmouseout="focusAufSpielfeld()">
+			<div data-role="header" data-theme="a" class="ui-corner-top">
+				<h1>Radar-Groesse</h1>
+			</div>
+			<div data-role="content" data-theme="d" class="ui-corner-bottom ui-content">
+
+				<input type="range" name="radar_slider" id="radar_slider" min="20" max="100" width="300" />    
+			</div>
+			 <div data-role="footer" align="center">
+				<a href="#page1">Ok</a>
+			 </div>  			
+
+		</div>		
+		<div  id ="hauptmenue" style="margin: 0 auto; vertical-align:middle" >
+			<div   id="erstellenMenue" data-theme="none"  onmouseout="focusAufSpielfeld()">
+						<div data-role="header" data-theme="a" class="ui-corner-top">
+							<h1>Neues Spiel</h1>
+						</div>
+						<div id = "divContainerErstellen" data-role="fieldcontain">
+							<ul id="erstellen_ListView" data-role="listview" data-inset="true" data-theme="b" >
+								<fieldset data-role="controlgroup" id="radio_group_neuesSpielErstellen" >
+								</fieldset>								
+								<li><a id = "erstellenButtonID" href="javascript:neuesSpielErstellen()"  align="center" >Erstellen</a></li> 
+							</ul>		
+						</div>		
+			</div>	
+			<div   id="beitretenMenue" data-theme="none" onmouseout="focusAufSpielfeld()">
+						<div data-role="header" data-theme="a" class="ui-corner-top">
+							<h1>Offene Spiele</h1>
+						</div>
+						<div id = "divContainerBeitreten" data-role="fieldcontain" >
+							<ul id="beitreten_ListView" data-role="listview" data-inset="true" data-theme="b">   
+								<fieldset data-role="controlgroup" id="radio_group_spielBeitreten" >	
+								</fieldset>								
+								<li><a id = "betretenButtonID" href="javascript:beitreten()"  align="center" >Beitreten</a></li>
+							 </ul>		
+						</div><!-- /collapsible -->			
+			</div>		
+
+		</div>		
+
+		<div id="facebookButton" style="position: fixed; bottom:20px;left:20px; z-index:0;"  class="fb-like" data-href="http://jojobattlepilot.de" data-width="400" data-layout="standard" data-action="like" data-show-faces="true" data-share="true" colorscheme="dark"></div>
+		
+<!--
+		<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+		-->
+		<!-- Werbung_Anzeigeblock -->
+		<!--
+		<ins class="adsbygoogle"
+			 style="display:inline-block;width:728px;height:90px; position: fixed; bottom:0px; z-index:0;"
+			 data-ad-client="ca-pub-8798219839930688"
+			 data-ad-slot="4154231658"></ins>
+			 
+		<script>
+		///////////(adsbygoogle = window.adsbygoogle || []).push({});
+		</script>
+-->		
+	</div>
+	
+	<div id="login-dialog" data-dialog="true" data-role="popup" data-close-btn="none" style="width:300px; left:50%; position:absolute; margin-left:-150px; height:400px; top:50%;margin-top:-200px; background:rgb(250, 250, 250)">		
+			<div data-role="header"   > 
+				<h1 >JojoBattlePilot</h1>
+
+			</div>
+
+			<div data-role="content" data-theme="c" class="ui-corner-bottom ui-content ui-body-c" role="main">
+					
+					  <p><span class="ui-icon ui-icon-alert" ></span>Please enter your nick name</p>
+						 <form>
+							<fieldset>
+							  <input type="text" name="nickname" id="nickname" class="text ui-widget-content ui-corner-all" >
+						 
+		
+							  
+							</fieldset>
+							
+						  </form>
+						  
+								  
+							<input type="button" id="nick_ok" value="Ok" style="font-size:1em" data-rel="back">
+							
+			</div>
+		
+	</div>			
+	<script>
+		// popupMessage wird nur sichtbar nach Klick im Menuepunkt oder nach dem Druecken von 'Enter'
+		$("#popupMessage").hide(); 
+	</script>
+  </body>
+
+</html>
