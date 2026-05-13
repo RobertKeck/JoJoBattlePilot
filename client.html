@@ -96,7 +96,7 @@
  * Version 0.925
  * Datum: 20.11.2015
  ************************************************
- 1) neue Buttons für Basis-Wechsel und fuer Gravitationswelle
+ 1) neue Buttons fï¿½r Basis-Wechsel und fuer Gravitationswelle
  ************************************************  
  ************************************************
  * Version 0.926
@@ -175,9 +175,9 @@
  1) Damit es weniger ruckelt, wird der Status der aktuellen Spielschleife verschickt, bevor gezeichnet wird.
     (Ob das wirklich viel Performance bringt, konnte ich nicht feststellen)
  2) Im InternetExplorer kann jetzt auch der Runde Radar angezeigt werden	
- 3) Wegen eines Aktuellen Bugs in Google Chrome wird beim Start mit Google Chrome die Maueart = Klassisch gewählt. Im Moment funktioniert in Chrome save + restore nicht, weil 
+ 3) Wegen eines Aktuellen Bugs in Google Chrome wird beim Start mit Google Chrome die Maueart = Klassisch gewï¿½hlt. Im Moment funktioniert in Chrome save + restore nicht, weil 
     voreingestellt "Beschleunigtes 2D-Canvas" = aktiv ist: Verwendet kein Softwarerendering, sondern aktiviert die Nutzung des GPU zur Berechnung von 2D-Canvasrendering
-	Kann der User nur manuell ändern, indem er chrome://flags/ startet und dort die Option deaktiviert und dann Chrome neu startet
+	Kann der User nur manuell ï¿½ndern, indem er chrome://flags/ startet und dort die Option deaktiviert und dann Chrome neu startet
  ************************************************ 
  
  *************************************************
@@ -238,7 +238,7 @@
  6) Plausi: ob max-Anzahl User zu einer Karte errreicht ist.
  7) Spiel Verlinken auf einer Browser-Game Web-Seite.
  8) Tanken (Energie wird aufgefuellt). Dazu neuer Tank-Button fuer Mobile
- 9) Hübschere Raumschiffe (Echte Grafiken)
+ 9) Hï¿½bschere Raumschiffe (Echte Grafiken)
  10) Moeglichkeit fuer Schutzschirm schaffen. (Wenn Schutzschirm an, dann kann man selber nicht schiessen.
      Wenn man getroffen wird, dann stirbt man nicht, sondern verliert Energie)
  11) Computer-Raumschiffe --> Dazu beim Oeffenen eines Spiels ein neues Optionen-Fenster,
@@ -576,7 +576,7 @@ function Fensterhoehe () {
  * die feldgroesse soll dabei zwischen 30 und 45 liegen, die Radargroesse zwischen 35 und 50.
  * Auf Mobilgeraeten wird es dadurch zu einer Feldgroesse von 30 kommen.
  * 
- * Der Benutzer kann beides manuell anpassen. Bei einer Änderung der Fenstergroesse während des Spiels soll kein automatischer Abgleich stattfinden.
+ * Der Benutzer kann beides manuell anpassen. Bei einer ï¿½nderung der Fenstergroesse wï¿½hrend des Spiels soll kein automatischer Abgleich stattfinden.
  */
 function  ermittleFeldgroesse(){
   var anzahlBildpunkteAktuell = Fensterhoehe() * Fensterweite();
@@ -663,7 +663,7 @@ function exitFullscreen() {
 }
 
 /**
- * Das Hauptmenue wird unterschiedlich positioniert. Wenn der Bildbereich breiter als höher ist, dann werden die beiden Menue's "Erstellen" und
+ * Das Hauptmenue wird unterschiedlich positioniert. Wenn der Bildbereich breiter als hï¿½her ist, dann werden die beiden Menue's "Erstellen" und
  * "Beitreten" nebeneinander dargestellt, sonst untereinander
  */
 function setzeMenuePosition(){
@@ -714,7 +714,7 @@ function setzeMenuePosition(){
 }
 
 
-/* Überwachung von Netscape initialisieren */
+/* ï¿½berwachung von Netscape initialisieren */
 if (document.body && window.innerWidth) {
   window.onresize = bildNeuAufbau;
 }	
@@ -1209,7 +1209,7 @@ function erzeugeMenue(){
 		</audio>
 		<audio id="sound_schub" preload="none">
 			  <source src="xwingloop.wav" type="audio/wav">
-			  <source src="xwingloop.mp3" type="audio/MPEG”">
+			  <source src="xwingloop.mp3" type="audio/MPEGï¿½">
 			  Your browser does not support the audio element.			  
 		</audio>	
 		<audio id="sound_gravitationsWelle" preload="none">
@@ -1225,7 +1225,7 @@ function erzeugeMenue(){
 				
 			$("login-dialog").ready(function()
 			{
-				// reagieren, wenn im anmeldeDialog eine taste gedrückt wurde
+				// reagieren, wenn im anmeldeDialog eine taste gedrï¿½ckt wurde
 				//var anmeldeDialog = document.getElementById('Anmelde-Dialog');  
 				$( "#nickname" ).keydown(function(e) {
 				
@@ -1306,8 +1306,8 @@ function erzeugeMenue(){
 				zeichneGesamtHintergrund(meinSpiel.map);
 				zeichneGesamtMauer(meinSpiel.map);
 				drawCanvasLeer();	
-				// reagieren, wenn im spielfeld eine taste gedrückt wurde
-				// 'pe' ist die gedrückte taste...
+				// reagieren, wenn im spielfeld eine taste gedrï¿½ckt wurde
+				// 'pe' ist die gedrï¿½ckte taste...
 				$(canvas_Spielfeld).keydown(function(e) {
 					  e.preventDefault();// scrollen durch Pfeiltasten unterdruecken 
 				
@@ -1316,7 +1316,7 @@ function erzeugeMenue(){
 				});
 
 				// reagieren, wenn im spielfeld eine taste losgelassen wurde
-				// 'e' ist die gedrückte taste...
+				// 'e' ist die gedrï¿½ckte taste...
 				$(canvas_Spielfeld).keyup(function(e) {
 						 e.preventDefault(); // scrollen durch Pfeiltasten unterdruecken
 				
@@ -1391,7 +1391,7 @@ function erzeugeMenue(){
 			</script>
 
 		<script type="text/javascript">
-				/* Überwachung von Internet Explorer initialisieren */
+				/* ï¿½berwachung von Internet Explorer initialisieren */
 				if (document.body && document.body.offsetWidth) {
 				  window.onresize = bildNeuAufbau;
 				}
