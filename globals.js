@@ -72,6 +72,7 @@
 	/**********************/
 	var Server;
 	var serverConnection = false;
+	var ipAdresse = "127.0.0.1";
 
 	var gameLoopNummer;
 	var pausenZeit = 0;

@@ -3,6 +3,9 @@
  * sondern nur wenn ein Button vorher gedrueckt wurde. Deshalb muss diese Funktion bei einem  Button-click gestartet werden.
  */
 function ladeSoundDatei(){
+	if (window.location.protocol === "file:") {
+		return;
+	}
 	
 	$('#audio_sprite')[0].load();
 	$('#audio_sprite')[0].volume = 0;
