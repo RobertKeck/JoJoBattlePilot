@@ -289,7 +289,7 @@ function wsOnOpen($clientID)
 	// Dem neuen Spieler wird seine ID gesendet.
 	$Server->wsSend($clientID, "CLIENT_ID"."|".$clientID);	
 	
-	$map_dir = "htdocs/jojoBattlePilot/maps/";
+	$map_dir = "../maps/";
 	$handle=opendir ($map_dir);
 	//echo "Verzeichnisinhalt:<br>";
 	
