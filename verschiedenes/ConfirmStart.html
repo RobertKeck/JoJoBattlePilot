@@ -1,0 +1,32 @@
+<!-- www.jjam.de - Confirmbox mit JavaScript - Version 20.12.2002 -->
+<html>
+
+	<head>
+		<title>Confirmbox</title>
+		<meta name="robots" content="noindex, nofollow">
+		<style type="text/css">p{font-family:verdana,arial;font-size:80%}</style>
+		<script language="JavaScript">
+			confirmWidth=300;
+			confirmHeight=200;
+			xConfirmStart=300;
+			yConfirmStart=100;
+			confirmTitle="<p align='center'><b>JavaScript Confirm !!!</b></p>";
+			confirmText="<p align='center'>Dieses Script begeistert Sie?<br><br>Und Sie wollen mir sofort eine Gl&uuml;ckwunsch-Mail schicken?</p>";
+			function okConfirm() {
+				document.getElementById("confirm").style.top=-500;
+				document.location.href="mailto:albert@jjam.de";
+			}
+			function abortConfirm() {
+				document.getElementById("confirm").style.top=-500;
+			}
+			function confirmAlternative() {
+				if(confirm("Dieses Script ist nicht für Ihren Steinzeit-Browser gedacht.\nWollen Sie sich darüber beschweren?")) document.location.href="mailto:albert@jjam.de.de";
+			}
+		</script>
+		<script language="JavaScript" src="Confirm.js"></script>
+	</head>
+
+	<body scroll="auto">
+		<p><br><a href="javascript:showConfirm()" onFocus="if(this.blur)this.blur()">HIER</a></p>
+	</body>
+<html>

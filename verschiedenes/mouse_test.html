@@ -1,0 +1,175 @@
+<!doctype html>
+<html>
+<head>
+<meta charset='UTF-8' />
+<style>
+</style>
+
+
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.3.1/jquery.mobile-1.3.1.min.css" />
+<script src="http://code.jquery.com/jquery-1.8.3.min.js"></script>
+<script src="http://code.jquery.com/ui/1.10.0/jquery-ui.js"></script>
+<script src="http://code.jquery.com/mobile/1.3.1/jquery.mobile-1.3.1.min.js"></script>
+
+<script>
+var abstandSteurungsFeldVomRand = 20;	
+var breiteSteuerungsFeld = 60;
+var hoeheSteuerungsFeld = 40;	
+var offset = $(this).offset();
+var rel_x ;
+var rel_y ;
+var spielfeldausschnitt_x = 200; /* Wird durch canvas.width - groesse bestimmt */
+var spielfeldausschnitt_y = 200; /* Wird durch canvas.heigth - groesse bestimmt */
+var clicking = false;
+var taste_links = 0;  /* 0 sei losgelassen, 1 sei gedrueckt */
+var taste_rechts = 0;  /* 0 sei losgelassen, 1 sei gedrueckt */
+var taste_schub = 0;  /* 0 sei losgelassen, 1 sei gedrueckt */
+var taste_schuss = 0;  /* 0 sei losgelassen, 1 sei gedrueckt */
+
+
+
+		$(document).on('pageinit', function(){
+
+					$('body').on("vmousemove",function(e){
+					    if(clicking == true){
+					    	pruefeSteuerungsFeld(e.pageX, e.pageY);
+							
+							// Zeichne Steuerungsfeld
+							var canvas = document.getElementById('canvas_Spielfeld');
+							var context = canvas.getContext('2d');
+							zeichneSteuerungsFeld(context);
+					    }
+					});
+					$('#canvas_Spielfeld').on("vmousedown",function(e){
+						    var offset = $(this).offset();    
+		        			rel_x = e.pageX - offset.left;
+		        			rel_y = e.pageY - offset.top;
+
+		    				clicking = true;
+							taste_links = 0;
+							taste_rechts = 0;		
+							taste_schub = 0;							
+				    
+
+					});
+	
+					$('body').on("vmouseup",function(){
+					    clicking = false;
+					    taste_rechts = 0;
+					    taste_links = 0;
+					    taste_schub = 0;
+					    taste_schuss = 0;
+					});
+					$('body').on("vmouseleave",function(){
+					    clicking = false;
+					    taste_rechts = 0;
+					    taste_links = 0;
+					    taste_schub = 0;
+					});		
+		});					
+		/**
+		 * Abhaengig von der MouseCursor-Position in bezug auf die Mouse-Position vor der Bewegung
+		 * dreht sich das Raumschiff nach links oder nach rechts und/oder es wird Schub gegeben
+		 */
+		function pruefeSteuerungsFeld(x_move, y_move){
+				// Drehung
+				if (x_move - rel_x > 30){
+					rel_x = x_move;
+					if (taste_links == 1){
+						taste_links = 0;
+						taste_rechts = 0;
+					}
+					else {
+						taste_rechts = 1;
+					}
+				}
+				if (x_move - rel_x < -30){
+					rel_x = x_move;
+					if (taste_rechts == 1){
+						taste_rechts = 0;
+						taste_links = 0;
+					}
+					else {
+						taste_links = 1;
+					}
+				}
+				// Schub
+				if (y_move - rel_y > 30){
+					rel_y = y_move;
+					taste_schub = 0;
+				}
+				if (y_move - rel_y < -30){
+					rel_y = y_move;
+					taste_schub = 1;
+				}
+				
+		
+		}
+	
+		
+		function zeichneSteuerungsFeld(context){
+				context.beginPath();
+				context.strokeStyle = "#7F7F7F"
+				context.moveTo(abstandSteurungsFeldVomRand ,	spielfeldausschnitt_y - abstandSteurungsFeldVomRand - hoeheSteuerungsFeld);
+				context.lineTo(abstandSteurungsFeldVomRand + breiteSteuerungsFeld, spielfeldausschnitt_y - abstandSteurungsFeldVomRand - hoeheSteuerungsFeld);
+				context.lineTo(abstandSteurungsFeldVomRand + breiteSteuerungsFeld, spielfeldausschnitt_y - abstandSteurungsFeldVomRand);
+				context.lineTo(abstandSteurungsFeldVomRand, spielfeldausschnitt_y - abstandSteurungsFeldVomRand);
+				context.lineTo(abstandSteurungsFeldVomRand ,	spielfeldausschnitt_y - abstandSteurungsFeldVomRand - hoeheSteuerungsFeld);						
+				context.stroke();	
+				
+				// Zeichne im Steuerungsfeld den Knopf, dessen Position angibt, ob gerade nach links oderr rechts gefahren wird, oder ob Schub gegeben wird.
+				var steuerKnopf_x = abstandSteurungsFeldVomRand + breiteSteuerungsFeld/3;
+				var steuerKnopf_y = spielfeldausschnitt_y - abstandSteurungsFeldVomRand - hoeheSteuerungsFeld/2;
+				if (taste_links == 1){
+					steuerKnopf_x -= breiteSteuerungsFeld/3;
+				}
+				if (taste_rechts == 1){
+					steuerKnopf_x += breiteSteuerungsFeld/3;
+				}
+				if (taste_schub == 1){
+					steuerKnopf_y -= hoeheSteuerungsFeld/2;
+				}
+				context.beginPath();
+				context.strokeStyle = "rgb(255, 255, 255)";	
+				context.moveTo(steuerKnopf_x ,	steuerKnopf_y);
+				context.lineTo(steuerKnopf_x + breiteSteuerungsFeld/3, steuerKnopf_y);
+				context.lineTo(steuerKnopf_x + breiteSteuerungsFeld/3, steuerKnopf_y + hoeheSteuerungsFeld/2);
+				context.lineTo(steuerKnopf_x , steuerKnopf_y + hoeheSteuerungsFeld/2);
+				context.lineTo(steuerKnopf_x ,	steuerKnopf_y);				
+				context.stroke();		
+				context.fillStyle = "#7F7F7F";
+				context.fill();
+						
+		}		
+    </script>
+</head>
+
+  <body class="ui-widget-content" style="border: 0;">
+  
+	
+		<div data-role="page" id="page1" >
+
+
+			<script type="text/javascript">
+
+		    		
+				document.writeln('<canvas id="canvas_Spielfeld" width="200" height="200" style="');
+				document.writeln('float:left; margin-right:10px;  visibility: visible;  z-index: 0; solid #c3c3c3;">');
+				document.writeln('Your browser does not support the canvas element.');
+			  	document.writeln('</canvas>');
+			  	
+			  	$("#canvas_Spielfeld").attr("contentEditable", "true")
+				$("#canvas_Spielfeld")[0].contentEditable = true;
+		
+				/* Überwachung von Internet Explorer initialisieren */
+				/**
+				if (document.body && document.body.offsetWidth) {
+				  window.onresize = bildNeuAufbau;
+				}
+				**/
+			</script>
+		</div>
+	</body>
+
+</html>
+	

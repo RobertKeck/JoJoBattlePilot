@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>slider demo</title>
+  <link rel="stylesheet" href="http://code.jquery.com/mobile/1.3.1/jquery.mobile-1.3.1.min.css">
+  <script src="http://code.jquery.com/jquery-1.10.0.min.js"></script>
+  <script src="http://code.jquery.com/mobile/1.3.1/jquery.mobile-1.3.1.min.js"></script>
+<style type="text/css">  
+  
+  #f1 { position:fixed; top:10px; left:10px;  }
+  </style>
+</head>
+
+<script>
+function drawCanvas(){
+    var canvas = document.getElementById('testcanvas1');
+    if(canvas.getContext){
+        var context = canvas.getContext('2d');
+        context.fillStyle = "rgb(255, 0, 255)";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+    }
+}
+</script>
+<body onload="drawCanvas()">
+ 
+<div data-role="page" id="page1">
+
+	<canvas id="testcanvas1" width="600" height="600">
+		Dein Browser kann diese Grafik nicht darstellen.
+	</canvas>
+		<div id="f1">
+		
+				<a href="#page2" data-rel="popup" data-role="button" data-icon="grid" data-iconpos="notext" data-theme="b" data-inline="true">Menue</a>
+		</div>    
+	<!--	
+  <div data-role="content">
+		<p>So ein wunderschoener Text...So ein wunderschoener Text...So ein wunderschoener Text...So ein wunderschoener Text...</p>
+		<div position:fixed ; top:20px; left:20px;>
+				<a href="#page2" data-role="button" data-icon="grid" data-iconpos="notext" data-theme="b" data-inline="true">Menue</a>
+		</div>    
+  </div>
+  -->
+</div>
+
+<!--
+		<div data-role="popup" id="page2" data-theme="a">
+				<ul data-role="listview" data-inset="true" style="min-width:210px;" data-theme="b">
+					<li data-role="divider" data-theme="a">Popup API</li>
+					<li><a href="#page3">Farbeinstellung</a></li>
+					<li><a href="#page1">Zurueck</a></li>
+				</ul>
+		</div>
+-->		
+	
+<div data-role="popup" id="page2" style="max-width:200px; width:150px; height:150px;">
+
+		<ul data-role="listview" style="min-width:200px;max-width:200px; width:150px; height:150px;" >
+			<li data-role="divider" data-theme="a">Popup API</li>
+			<li><a href="#page3">Farbeinstellung</a></li>
+			<li><a href="#page1">Zurueck</a></li>
+		</ul>
+		
+</div>
+
+
+<div data-role="dialog" id="page3" style="width:350px; height:250px;"> >
+  <div data-role="header">
+    <h1>I'm A Dialog Box!</h1>
+  </div>
+
+  <div data-role="main" class="ui-content">
+    <p>The dialog box is different from a normal page, it is displayed on top of the current page and it will not span the entire width of the page. The dialog has also an icon of "X" in the header to close the box.</p>
+    <label for="slider-0">Input slider:</label>
+    <input type="range" name="slider-0" id="slider-0" value="60" min="0" max="100" />    
+  </div>
+  <div data-role="footer">
+    <a href="#page1">Go to Page One</a>
+  </div>  
+
+
+</div> 
+ 
+</body>
+</html>
+

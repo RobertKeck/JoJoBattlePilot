@@ -1,0 +1,92 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.3.1/jquery.mobile-1.3.1.min.css" />
+<script src="http://code.jquery.com/jquery-1.8.3.min.js"></script>
+<script src="http://code.jquery.com/ui/1.10.0/jquery-ui.js"></script>
+<script src="http://code.jquery.com/mobile/1.3.1/jquery.mobile-1.3.1.min.js"></script>
+	
+<style type="text/css">  
+  
+  #f1 { position:fixed; top:20px; left:20px;  }
+  </style>
+</head>
+
+<script>
+function drawCanvas(){
+
+    var canvas = document.getElementById('testcanvas1');
+    if(canvas.getContext){
+        var context = canvas.getContext('2d');
+        context.fillStyle = "rgb(255, 0, 255)";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+    }
+	
+}
+</script>
+<body onload="drawCanvas()">
+ 
+<div data-role="page" id="page1">
+
+	<div data-role="content" class="ui-body">
+
+		<canvas id="testcanvas1" width="600" height="600">
+			Dein Browser kann diese Grafik nicht darstellen.
+		</canvas>
+		<div id="f1">
+					<a href="#popupNested" data-rel="popup" data-role="button" data-icon="grid" data-iconpos="notext" data-theme="a" data-inline="true">Menue</a>
+		</div>    
+	</div>	
+
+
+
+	<div data-role="popup" id="popupNested" data-theme="none">
+				<div data-role="collapsible-set" data-theme="b" data-content-theme="c" style="margin:0; width:250px;">
+					<ul data-role="listview" data-inset="true" style="min-width:210px;" data-theme="b">
+
+						<li><a href="#chatEingabe" data-rel="popup" data-position-to="window" data-inline="true" data-transition="pop">Chat</a></li>
+						
+						<div data-role="collapsible" data-inset="false" data-collapsed-icon="arrow-r" data-iconpos="right" data-expanded-icon="arrow-d" >
+							<h2>Einstellungen</h2>
+							<ul data-role="listview" >
+								<li><a href="#popupDialogFarbe" data-rel="popup" data-position-to="window" data-inline="true" data-transition="pop">Farbe</a></li>
+								<li><a href="#popupDialogSound" data-rel="popup" data-position-to="window" data-inline="true" data-transition="pop">Sound</a></li>
+							</ul>
+
+						</div>
+						<li><a href="#page1">Zurück ins Hauptmenue</a></li>
+
+					</ul>		
+				</div><!-- /collapsible -->			
+	</div>
+
+
+	<div data-role="popup" id="popupDialogFarbe" data-overlay-theme="a" data-theme="c" style="max-width:400px;" class="ui-corner-all">
+		<div data-role="header" data-theme="a" class="ui-corner-top">
+			<h1>Farbeinstellungen</h1>
+		</div>
+		<div data-role="content" data-theme="d" class="ui-corner-bottom ui-content">
+			<p>The dialog box is different from a normal page, it is displayed on top of the current page and it will not span the entire width of the page. The dialog has also an icon of "X" in the header to close the box.</p>
+			<label for="slider-0">Input slider:</label>
+			<input type="range" name="slider-0" id="slider-0" value="60" min="0" max="100" />    
+		 </div>
+		 <div data-role="footer">
+			<a href="#page1">Weiterspielen</a>
+		 </div>  		
+	</div>
+
+	<div data-role="popup" id="popupDialogSound" data-overlay-theme="a" data-theme="c" style="max-width:400px; width:300px;" class="ui-corner-all">
+		<div data-role="header" data-theme="a" class="ui-corner-top">
+			<h1>Sound</h1>
+		</div>
+		<div data-role="content" data-theme="d" class="ui-corner-bottom ui-content">
+			<input type="range" name="slider-0" id="slider-0" value="60" min="0" max="100" width="300" />    
+		 </div>
+			
+	</div>	
+
+</div>	
+
+</body>
+</html>

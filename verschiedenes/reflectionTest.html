@@ -1,0 +1,47 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+ <html xmlns="http://www.w3.org/1999/xhtml">
+  
+  <head>
+
+	<style>
+
+	</style>
+
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+  <title>jQuery reflection Test</title>
+  <script type="text/javascript" src="http://code.jquery.com/jquery-1.4.2.min.js"></script>
+  <script type="text/javascript" src="reflection_ohne_opacity.js"></script>
+  <script type="text/javascript" src="jQueryRotate.js"></script>  
+
+  
+  
+  <script type="text/javascript">
+ $(document).ready(function(){
+     $(".reflection img").reflect({ height:1, opacity:1 });
+     
+     //$(".reflection img").rotate({angle:90});
+     $(".reflection img").rotate({angle:90});
+
+
+		var pic1 = document.getElementById("eineMauer"); 
+		var src = pic1.src;  // here is the src for image1
+		
+		var pic2 = document.getElementById("image2"); 
+		pic1.src = src;  // here we set the src for image2
+
+     //$(".reflection img").rotate({angle:10});
+     //$(".reflection img").reflect({ height:1, opacity:1 });
+ });
+ </script>
+ </head>
+ 
+<body>
+ <div class="reflection">
+     <img src="mauer.jpg" alt="" id="eineMauer" style="position:absolute; top:20px; left:200px"/>
+ </div>
+
+
+ </body>
+ 
+ 
+ </html>

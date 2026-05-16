@@ -1,0 +1,194 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.3.1/jquery.mobile-1.3.1.min.css" />
+<script src="http://code.jquery.com/jquery-1.8.3.min.js"></script>
+<script src="http://code.jquery.com/ui/1.10.0/jquery-ui.js"></script>
+<script src="http://code.jquery.com/mobile/1.3.1/jquery.mobile-1.3.1.min.js"></script>
+
+<script src="jojoBattlePilot_0.905/polygon.js" type="text/javascript"> </script>
+<script src="jojoBattlePilot_0.905/ecke.js" type="text/javascript"> </script>
+<script src="jojoBattlePilot_0.905/koordinate.js" type="text/javascript"> </script>
+<script src="MenuTest3.js" type="text/javascript"> </script>
+
+	
+<style type="text/css">  
+  
+  #f1 { position:fixed; top:20px; left:20px;  }
+  </style>
+</head>
+
+
+<body onload="  drawHintergrund()">
+
+ 
+<div data-role="page" id="page1">
+
+	<div data-role="content" class="ui-body">
+
+
+
+		<canvas id="testcanvas1" width="1500" height="1000">
+			Dein Browser kann diese Grafik nicht darstellen.
+		</canvas>
+		<canvas id="canvasBild" width="2953" height="1969" 
+	
+				style=" 
+				position:absolute; top:1200px; left:0px;  z-index: 0; solid #c3c3c3;">
+					
+	
+			Your browser does not support the canvas element.
+		</canvas>
+				
+		<div id="f1">
+					<a href="#popupNested" data-rel="popup" data-role="button" data-icon="grid" data-iconpos="notext" data-theme="a" data-inline="true">Menue</a>
+		</div>    
+	</div>	
+
+
+
+	<div data-role="popup" id="popupNested" data-theme="none">
+				<div data-role="collapsible-set" data-theme="b" data-content-theme="c" style="margin:0; width:250px;">
+					<ul data-role="listview" data-inset="true" style="min-width:210px;" data-theme="b">
+
+						<li><a href="#chatEingabe" data-rel="popup" data-position-to="window" data-inline="true" data-transition="pop">Chat</a></li>
+						
+						<div data-role="collapsible" data-inset="false" data-collapsed-icon="arrow-r" data-iconpos="right" data-expanded-icon="arrow-d" >
+							<h2>Einstellungen</h2>
+							<ul data-role="listview" >
+								<li><a href="#popupDialogFarbe" data-rel="popup" data-position-to="window" data-inline="true" data-transition="pop">Farbe</a></li>
+								<li><a href="#popupDialogSound" data-rel="popup" data-position-to="window" data-inline="true" data-transition="pop">Sound</a></li>
+								<li><a href="#popupDialogRaumschiff" data-rel="popup" data-position-to="window" data-inline="true" data-transition="pop">Raumschiff</a></li>
+							</ul>
+
+						</div>
+						<li><a href="#page1">Zurück ins Hauptmenue</a></li>
+
+					</ul>		
+				</div><!-- /collapsible -->			
+	</div>
+
+	<div data-role="popup" id="popupDialogRaumschiff" data-overlay-theme="a" data-theme="c" style="max-width:400px;" class="ui-corner-all">
+		<div data-role="header" data-theme="a" class="ui-corner-top">
+			<h1>Typ</h1>
+		</div>
+		<div data-role="content"  >
+		
+				<div data-role="controlgroup" id="radio_group_raumschiffTyp" >	
+				</div>					
+<!--				
+			      <label for=typ1> 
+			      		<canvas id="raumschiffCanvas1" width="45" height="45" >
+								Dein Browser kann diese Grafik nicht darstellen.
+							  </canvas>			      	
+			      </label>
+			      <input type=radio id=typ1 name=typ />
+			
+
+				      <script>
+				      	drawRaumschiff("raumschiffCanvas1");
+				      </script>
+		      <label for=typ2> 
+		      		<canvas id="raumschiffCanvas2" width="45" height="45" >
+							Dein Browser kann diese Grafik nicht darstellen.
+						  </canvas>		      	
+		      </label>
+		      <input type=radio id=typ2 name=typ />
+
+			      <script>
+			      	drawRaumschiff("raumschiffCanvas2");
+			      </script>
+		      
+		      <label for=typ3>
+		      		<canvas id="raumschiffCanvas3" width="45" height="45" >
+							Dein Browser kann diese Grafik nicht darstellen.
+						  </canvas>		      	
+		      </label>
+		      <input type=radio id=typ3 name=typ />
+						  
+		      <script>
+		      	drawRaumschiff("raumschiffCanvas3");
+		      </script>
+-->
+ 		 </div>
+		 <div data-role="footer">
+			<a href="#page1">Weiterspielen</a>
+		 </div>  		
+	</div>
+	
+	<div data-role="popup" id="popupDialogFarbe" data-overlay-theme="a" data-theme="c" style="max-width:400px;" class="ui-corner-all">
+		<div data-role="header" data-theme="a" class="ui-corner-top">
+			<h1>Farbeinstellungen</h1>
+		</div>
+		<div data-role="content" data-theme="d" class="ui-corner-bottom ui-content">
+			<p>The dialog box is different from a normal page, it is displayed on top of the current page and it will not span the entire width of the page. The dialog has also an icon of "X" in the header to close the box.</p>
+			<label for="slider-0">Input slider:</label>
+			<input type="range" name="slider-0" id="slider-0" value="60" min="0" max="100" />    
+		 </div>
+		 <div data-role="footer">
+			<a href="#page1">Weiterspielen</a>
+		 </div>  		
+	</div>
+
+	<div data-role="popup" id="popupDialogSound" data-overlay-theme="a" data-theme="c" style="max-width:400px; width:300px;" class="ui-corner-all">
+		<div data-role="header" data-theme="a" class="ui-corner-top">
+			<h1>Sound</h1>
+		</div>
+		<div data-role="content" data-theme="d" class="ui-corner-bottom ui-content">
+			<input type="range" name="slider-0" id="slider-0" value="60" min="0" max="100" width="300" />    
+		 </div>
+			
+	</div>	
+
+</div>	
+
+		<script type="text/javascript">
+	
+			$(document).ready(function()
+			{
+	
+				// reagieren, wenn im spielfeld eine taste gedrückt wurde
+				// 'e' ist die gedrückte taste...
+				$(document).keydown(function(e) {
+					  e.preventDefault();// scrollen durch Pfeiltasten unterdruecken 
+				
+						tastegedrueckt(e.which);
+				
+				});
+
+				// reagieren, wenn im spielfeld eine taste losgelassen wurde
+				// 'e' ist die gedrückte taste...
+				$(document).keyup(function(e) {
+						 e.preventDefault(); // scrollen durch Pfeiltasten unterdruecken
+				
+							tastelosgelassen(e.which);
+				
+				});
+
+				
+				
+				
+			});
+			
+				
+  		</script>
+<script>
+	drawGesamtBild();
+	erzeugeMenue();
+	berechneAbstandundWinkel(18,5);
+	berechneAbstandundWinkel(5,35);
+	berechneAbstandundWinkel(10,37);
+	berechneAbstandundWinkel(20,15);
+	berechneAbstandundWinkel(25,15);
+	berechneAbstandundWinkel(35,37);
+	berechneAbstandundWinkel(40,35);
+	berechneAbstandundWinkel(27,5);
+	berechneAbstandundWinkel(22.5,5);
+
+
+
+</script>	
+
+</body>
+</html>

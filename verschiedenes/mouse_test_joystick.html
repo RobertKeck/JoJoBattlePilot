@@ -1,0 +1,567 @@
+<!doctype html>
+<html>
+<head>
+<meta charset='UTF-8' />
+<!-- meta id="viewport" name=viewport content="width=device-width; initial-scale=1" -->
+
+
+<style>
+</style>
+
+
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.3.1/jquery.mobile-1.3.1.min.css" />
+<link rel="apple-touch-icon-precomposed" href="jojoBattlePilot.PNG" >
+<script src="http://code.jquery.com/jquery-1.8.3.min.js"></script>
+<script src="http://code.jquery.com/ui/1.10.0/jquery-ui.js"></script>
+<script src="http://code.jquery.com/mobile/1.3.1/jquery.mobile-1.3.1.min.js"></script>
+
+<script>
+var abstandSteurungsFeldVomRand = 20;	
+var breiteSteuerungsFeld = 60;
+var hoeheSteuerungsFeld = 40;	
+var offset = $(this).offset();
+var rel_x ;
+var rel_y ;
+var spielfeldausschnitt_x = 800; /* Wird durch canvas.width - groesse bestimmt */
+var spielfeldausschnitt_y = 800; /* Wird durch canvas.heigth - groesse bestimmt */
+var clicking = false;
+var taste_links = 0;  /* 0 sei losgelassen, 1 sei gedrueckt */
+var taste_rechts = 0;  /* 0 sei losgelassen, 1 sei gedrueckt */
+var taste_schub = 0;  /* 0 sei losgelassen, 1 sei gedrueckt */
+var taste_schuss = 0;  /* 0 sei losgelassen, 1 sei gedrueckt */
+var mittelpunkt_x = 150;
+var mittelpunkt_y = 150;
+
+var alpha = Math.PI;
+var beta = 0;
+var speed_faktor = 1;
+var drehwinkel = 0.19634954 / speed_faktor;
+var radius = 50;
+
+    function fullscreen(){
+        var el = document.getElementById('canvas_Spielfeld');
+
+           if(el.webkitRequestFullScreen) {
+               el.webkitRequestFullScreen();
+           }
+          else {
+             el.mozRequestFullScreen();
+          }            
+        }
+function vollbild() {
+	
+	$('head').append('<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">');
+	
+	//var element = document.getElementById("canvas_Spielfeld");
+	//var element = document.getElementsByTagName("body")[0];
+	var element = document.body;
+
+	if (element.requestFullscreen) {	//# Opera 12
+		console.info("Opera 12");
+		//	if (!document.fullscreen) {
+		if (!document.fullscreenElement) {
+			element.requestFullscreen();
+		}
+		else {
+			document.exitFullscreen();
+		}
+	}
+	else if (element.mozRequestFullScreen) {
+		console.info("Mozilla");
+		if (!document.mozFullScreen) {
+			element.mozRequestFullScreen();
+		}
+		else {
+			document.mozCancelFullScreen();	
+		}
+	} else if (element.webkitRequestFullScreen) {	//# Opera 15, Chrome
+		console.info("Webkit (Opera 15, Chrome)");
+		if (!document.webkitIsFullScreen) {
+			element.webkitRequestFullScreen();
+		}
+		else {
+			document.webkitCancelFullScreen();
+		}
+	}
+	//zentriereVertikal();
+	//$("#viewport").attr("content", "width=480");
+	//document.queryselector("canvas_Spielfeld").getContext("2d").scale(2, 2);
+	var el = document.getElementById('canvas_Spielfeld');
+	el.getContext("2d").scale(0.1, 0.1);
+	
+}		
+function toggleFullScreen() {
+   var el = document.getElementById('canvas_Spielfeld');	
+  if (!document.fullscreenElement &&    // alternative standard method
+      !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement ) {  // current working methods
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen();
+    } else if (document.documentElement.msRequestFullscreen) {
+      document.documentElement.msRequestFullscreen();
+    } else if (document.documentElement.mozRequestFullScreen) {
+      document.documentElement.mozRequestFullScreen();
+    } else if (document.documentElement.webkitRequestFullscreen) {
+      document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+    }
+  } else {
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if (document.msExitFullscreen) {
+      document.msExitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+      document.mozCancelFullScreen();
+    } else if (document.webkitExitFullscreen) {
+      document.webkitExitFullscreen();
+    }
+  }
+}
+
+function mouseStart(evt) {
+  //evt.preventDefault();
+
+  
+ 		var canvas = document.getElementById('canvas_Spielfeld');
+		canvas.width = canvas.width; // Clears the canvas
+		var ctx = canvas.getContext('2d');
+		//ctx.scale(0.5, 0.5);
+		var px = evt.pageX;
+		var py = evt.pageY;
+		ctx.beginPath();
+		ctx.arc(px, py, 20, 0, 2*Math.PI, true);
+		ctx.fillStyle = "rgba(0, 0, 200, 0.2)";
+		ctx.fill();
+		ctx.lineWidth = 2.0;
+		ctx.strokeStyle = "rgba(0, 0, 200, 0.8)";
+		ctx.stroke();
+		
+		if (evt.pageX < spielfeldausschnitt_x / 2){	
+			ermittleDrehbewegung(evt.pageX, evt.pageY);
+			ermittleSchub(evt.pageX, evt.pageY);
+		}
+		bewegung();
+		//clicking = true;
+
+
+		
+		zeichneSteuerungsFeld();		
+		
+}
+
+function handleStart(event) {
+	var canvas = document.getElementById('canvas_Spielfeld');
+	canvas.width = canvas.width; // Clears the canvas
+	var ctx = canvas.getContext('2d');
+  event.preventDefault();
+  var touches = event.touches;
+
+	var i, len = touches.length;
+	for (i=0; i<len; i++) {
+		
+				var touch = touches[i];
+				var px = touch.pageX;
+				var py = touch.pageY;
+				ctx.beginPath();
+				ctx.arc(px, py, 20, 0, 2*Math.PI, true);
+				ctx.fillStyle = "rgba(0, 0, 200, 0.2)";
+				ctx.fill();
+				ctx.lineWidth = 2.0;
+				ctx.strokeStyle = "rgba(0, 0, 200, 0.8)";
+				ctx.stroke();
+				console.log('drawn circle at ' + px +',' + py);
+		if (touches[i].pageX < spielfeldausschnitt_x / 2){		
+				ermittleDrehbewegung(touches[i].pageX, touches[i].pageY);
+				ermittleSchub(touches[i].pageX, touches[i].pageY);
+		}
+			
+	}
+	bewegung();	
+	zeichneSteuerungsFeld();
+	
+}
+
+/***
+function handleStart(evt) {
+	canvas = document.getElementById('canvas_Spielfeld');
+	ctx = canvas.getContext('2d');
+  evt.preventDefault();
+  //console.log("touchstart.");
+  
+
+  
+  //var touches = evt.changedTouches;
+  var touches = evt.touches;
+        
+  for (var i=0; i < touches.length; i++) {
+    log("touchstart:"+i+"...");
+	//if (touches[i].pageX < spielfeldausschnitt_x / 2)
+	{
+		canvas = document.getElementById('canvas_Spielfeld');
+		ctx = canvas.getContext('2d');
+		var px = touches[i].pageX;
+		var py = touches[i].pageY;
+		ctx.beginPath();
+		ctx.arc(px, py, 20, 0, 2*Math.PI, true);
+		ctx.fillStyle = "rgba(0, 0, 200, 0.2)";
+		ctx.fill();
+		ctx.lineWidth = 2.0;
+		ctx.strokeStyle = "rgba(0, 0, 200, 0.8)";
+		ctx.stroke();
+			
+
+		//ermittleDrehbewegung(touches[i].pageX, touches[i].pageY);
+		//ermittleSchub(touches[i].pageX, touches[i].pageY);
+		//bewegung();
+		//clicking = true;
+
+
+		
+	
+
+	}
+	
+
+  }
+  //zeichneSteuerungsFeld();
+}
+***/
+
+function handleEnd(evt) {
+		clicking = false;
+		taste_rechts = 0;
+		taste_links = 0;
+		taste_schub = 0;
+		taste_schuss = 0;
+		zeichneSteuerungsFeld();
+}
+
+		$(document).on('pageinit', function(){
+
+				zeichneSteuerungsFeld();
+
+					$('body').on("vmousemove",function(e){
+						//handleStart(e);
+					/***
+							if (clicking == true){
+								ermittleDrehbewegung(e.pageX, e.pageY);
+								bewegung();
+								ermittleSchub(e.pageX, e.pageY);
+								zeichneSteuerungsFeld();
+							}
+							***/
+					});
+					/****
+					$('#canvas_Spielfeld').on("vmousedown",function(e){
+					
+							ermittleDrehbewegung(e.pageX, e.pageY);
+							ermittleSchub(e.pageX, e.pageY);
+							bewegung();
+							clicking = true;
+
+							zeichneSteuerungsFeld();
+				    
+
+					});
+	
+					$('body').on("vmouseup",function(){
+					    clicking = false;
+					    taste_rechts = 0;
+					    taste_links = 0;
+					    taste_schub = 0;
+					    taste_schuss = 0;
+						zeichneSteuerungsFeld();
+					});
+					$('body').on("vmouseleave",function(){
+					    clicking = false;
+					    taste_rechts = 0;
+					    taste_links = 0;
+					    taste_schub = 0;
+						zeichneSteuerungsFeld();
+					});	
+***/					
+		});					
+		/**
+		 * Abhaengig von der MouseCursor-Position in bezug auf die Mouse-Position vor der Bewegung
+		 * dreht sich das Raumschiff nach links oder nach rechts und/oder es wird Schub gegeben
+		 */
+		function pruefeSteuerungsFeld(x_move, y_move){
+				var pixel_bewegung = 3;
+				// Drehung
+				if (x_move - rel_x > pixel_bewegung){
+					rel_x = x_move;
+					if (taste_links == 1){
+						taste_links = 0;
+						taste_rechts = 0;
+					}
+					else {
+						taste_rechts = 1;
+					}
+				}
+				if (x_move - rel_x < -pixel_bewegung){
+					rel_x = x_move;
+					if (taste_rechts == 1){
+						taste_rechts = 0;
+						taste_links = 0;
+					}
+					else {
+						taste_links = 1;
+					}
+				}
+				// Schub
+				if (y_move - rel_y > pixel_bewegung){
+					rel_y = y_move;
+					taste_schub = 0;
+				}
+				if (y_move - rel_y < -pixel_bewegung){
+					rel_y = y_move;
+					taste_schub = 1;
+				}
+				
+		
+		}
+	    
+		function ermittleDrehbewegung(mouse_x, mouse_y){
+		     beta = ermittleBeta(mouse_x, mouse_y);
+			 
+			 var diff = alpha - beta; 
+			 // keine Drehung
+			 if (Math.abs(diff) < drehwinkel){
+			    
+				taste_links = 0;
+				taste_rechts = 0;
+				return;
+			 }
+			 // Linksdrehung
+			 if (diff < -Math.PI){ 
+				taste_links = 1;
+				taste_rechts = 0;				
+			 }	
+			// Rechtsdrehung			 
+			 else if (diff < 0){
+				taste_links = 0;
+				taste_rechts = 1;
+			 }
+			 // Linksdrehung
+			 else if (diff < Math.PI){
+				taste_links = 1;
+				taste_rechts = 0;	
+			 }
+			// Rechtsdrehung			 
+			 else {
+				taste_links = 0;
+				taste_rechts = 1;
+			 }
+			 
+		}
+		function zeichneStrichInRichtungAlpha(){
+				canvas = document.getElementById('canvas_Spielfeld');
+				ctx = canvas.getContext('2d');
+				ctx.fillStyle = "rgb(0, 0, 0)";
+				ctx.beginPath();
+				ctx.moveTo(mittelpunkt_x, mittelpunkt_y);
+				ctx.lineTo(mittelpunkt_x + Math.sin(alpha + Math.PI/2)*radius, mittelpunkt_y + Math.cos(alpha + Math.PI/2)*radius);
+				ctx.fill();
+		
+				ctx.strokeStyle = "#7F7F7F"
+				ctx.stroke();
+			
+		
+		}
+		function ermittleSchub(mouse_x, mouse_y){
+		    var entfernung_zum_mittelpunkt = Math.sqrt(Math.pow(mittelpunkt_y - mouse_y, 2) + Math.pow(mouse_x - mittelpunkt_x, 2))
+			if (entfernung_zum_mittelpunkt > radius){
+				taste_schub = 1;
+			}
+			else{
+				taste_schub = 0;
+			}
+		}
+		function ermittleBeta(mouse_x, mouse_y){
+			var beta = Math.atan(Math.abs((mittelpunkt_y - mouse_y) / (mouse_x- mittelpunkt_x )));
+			
+			if (mouse_x < mittelpunkt_x){
+				if (mouse_y < mittelpunkt_y){
+					beta = Math.PI - beta;
+				}
+				else {
+					beta = Math.PI + beta;
+				}
+			}
+			else{
+				if (mouse_y > mittelpunkt_y){
+					beta = 2*Math.PI - beta;
+				}
+			}
+//			console.log(beta);
+			return beta;
+		}
+		function bewegung(){
+				if (taste_links == 1){
+					alpha -= drehwinkel;
+				}
+				if (taste_rechts == 1){
+						alpha += drehwinkel;
+				}
+				if (this.alpha > 2*Math.PI){
+					this.alpha -= 2*Math.PI;
+				}
+				if (this.alpha < 0){
+					this.alpha += 2*Math.PI;
+				}
+				
+				//console.log(alpha);
+		}
+		function zeichneSteuerungsFeld(context){
+				var canvas = document.getElementById('canvas_Spielfeld');
+				///canvas.width = canvas.width; // Clears the canvas
+				var context = canvas.getContext('2d');
+				context.beginPath();
+				context.arc(mittelpunkt_x, mittelpunkt_y, 3, 0, 2 * Math.PI);
+				context.stroke();
+				context.beginPath();
+				context.arc(mittelpunkt_x, mittelpunkt_y, radius, 0, 2 * Math.PI);
+				context.stroke();
+				/***
+				context.beginPath();
+				context.strokeStyle = "#7F7F7F"
+				context.moveTo(abstandSteurungsFeldVomRand ,	spielfeldausschnitt_y - abstandSteurungsFeldVomRand - hoeheSteuerungsFeld);
+				context.lineTo(abstandSteurungsFeldVomRand + breiteSteuerungsFeld, spielfeldausschnitt_y - abstandSteurungsFeldVomRand - hoeheSteuerungsFeld);
+				context.lineTo(abstandSteurungsFeldVomRand + breiteSteuerungsFeld, spielfeldausschnitt_y - abstandSteurungsFeldVomRand);
+				context.lineTo(abstandSteurungsFeldVomRand, spielfeldausschnitt_y - abstandSteurungsFeldVomRand);
+				context.lineTo(abstandSteurungsFeldVomRand ,	spielfeldausschnitt_y - abstandSteurungsFeldVomRand - hoeheSteuerungsFeld);						
+				context.stroke();	
+				
+				// Zeichne im Steuerungsfeld den Knopf, dessen Position angibt, ob gerade nach links oderr rechts gefahren wird, oder ob Schub gegeben wird.
+				var steuerKnopf_x = abstandSteurungsFeldVomRand + breiteSteuerungsFeld/3;
+				var steuerKnopf_y = spielfeldausschnitt_y - abstandSteurungsFeldVomRand - hoeheSteuerungsFeld/2;
+				if (taste_links == 1){
+					steuerKnopf_x -= breiteSteuerungsFeld/3;
+				}
+				if (taste_rechts == 1){
+					steuerKnopf_x += breiteSteuerungsFeld/3;
+				}
+				if (taste_schub == 1){
+					steuerKnopf_y -= hoeheSteuerungsFeld/2;
+				}
+				context.beginPath();
+				context.strokeStyle = "rgb(255, 255, 255)";	
+				context.moveTo(steuerKnopf_x ,	steuerKnopf_y);
+				context.lineTo(steuerKnopf_x + breiteSteuerungsFeld/3, steuerKnopf_y);
+				context.lineTo(steuerKnopf_x + breiteSteuerungsFeld/3, steuerKnopf_y + hoeheSteuerungsFeld/2);
+				context.lineTo(steuerKnopf_x , steuerKnopf_y + hoeheSteuerungsFeld/2);
+				context.lineTo(steuerKnopf_x ,	steuerKnopf_y);				
+				context.stroke();		
+				context.fillStyle = "#777777";
+				context.fill();
+				***/
+				zeichneStrichInRichtungAlpha();
+						
+		}		
+
+    </script>
+</head>
+
+  <body class="ui-widget-content" style="border: 0; font-size: 3vw;" >
+  
+
+  
+		<div data-role="page" id="page1" >
+
+			<dialog  id="Anmelde-Dialog" title="Login" style="z-index: 1; position:fixed; width:40%; height:60%; top:10%; font-size: 3vw;">
+				  <p><span class="ui-icon ui-icon-alert" ></span>Please enter your nick name</p>
+					 <form>
+						<fieldset>
+						  <input type="text" name="nickname" id="nickname" value="" class="text ui-widget-content ui-corner-all" style=" font-size: 3vw;">
+					 
+						  <!-- Allow form submission with keyboard without duplicating the dialog button -->
+						  
+						</fieldset>
+						
+					  </form>
+					  <input type="button" id="nick_ok" value="Ok" style="font-size:1em"/>
+							  
+  
+			</dialog>
+			
+			<script type="text/javascript">
+
+		    		
+				document.writeln('<canvas id="canvas_Spielfeld" width="800" height="800" style="');
+				document.writeln('float:left; margin-right:10px;  visibility: visible;  z-index: 0; solid #c3c3c3;">');
+				document.writeln('Your browser does not support the canvas element.');
+			  	document.writeln('</canvas>');
+			  	
+			  	$("#canvas_Spielfeld").attr("contentEditable", "true")
+				$("#canvas_Spielfeld")[0].contentEditable = true;
+
+				var anmeldeDialog = document.getElementById('Anmelde-Dialog');  
+				anmeldeDialog.showModal(); 
+
+				document.getElementById('nick_ok').onclick = function() {  
+						meinName = $( "#nickname" ).val();
+						if (!meinName.length > 0){
+							return false;
+						}
+						else{
+							anmeldeDialog.close();
+							vollbild();
+							return true;
+						}				
+					
+				};  				
+				
+				$(document).ready(function(){
+						var canvas = document.getElementById('canvas_Spielfeld');
+						canvas.addEventListener("touchstart", function(event) {
+							handleStart(event);
+						});
+						canvas.addEventListener("touchmove", function(event) {
+							handleStart(event);
+						});						
+						canvas.addEventListener("touchend", function(event) {
+							handleEnd(event);
+						});
+						
+						canvas.addEventListener("mousedown", function(event) {
+						    clicking = true;
+							mouseStart(event);
+							//toggleFullScreen();
+							//fullscreen();
+							//vollbild();
+						});
+						canvas.addEventListener("mousemove", function(event) {
+						    if (clicking == true){
+								mouseStart(event);
+							}
+						});						
+						canvas.addEventListener("mouseup", function(event) {
+								clicking = false;
+								taste_rechts = 0;
+								taste_links = 0;
+								taste_schub = 0;
+								taste_schuss = 0;
+						});	
+						canvas.addEventListener("mouseleave", function(event) {
+								clicking = false;
+								taste_rechts = 0;
+								taste_links = 0;
+								taste_schub = 0;
+								taste_schuss = 0;
+						});		
+
+						document.addEventListener("keydown", function(e) {
+						  if (e.keyCode == 13) {
+							//toggleFullScreen();
+							//vollbild();
+							
+						  }
+						}, false);
+				});			
+				
+				
+				
+			</script>
+		</div>
+	</body>
+
+</html>
+	

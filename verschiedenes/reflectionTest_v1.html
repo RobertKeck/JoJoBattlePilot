@@ -1,0 +1,36 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+ <html xmlns="http://www.w3.org/1999/xhtml">
+  
+  <head>
+
+	<style>
+
+	</style>
+
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+  <title>jQuery reflection Test</title>
+  <script type="text/javascript" src="http://code.jquery.com/jquery-1.4.2.min.js"></script>
+  <script type="text/javascript" src="reflection_ohne_opacity.js"></script>
+  <script type="text/javascript" src="jQueryRotate.js"></script>  
+
+  
+  
+  <script type="text/javascript">
+ $(document).ready(function(){
+     $(".reflection img").reflect({ height:1, opacity:1 });
+     $(".reflection img").reflect({ height:1, opacity:1 });
+     //$(".reflection img").rotate({angle:90});
+     
+ });
+ </script>
+ </head>
+ 
+<body>
+ <div class="reflection">
+     <img src="mauer.jpg" alt="" id="eineMauer"/>
+ </div>
+
+ </body>
+ 
+ 
+ </html>
