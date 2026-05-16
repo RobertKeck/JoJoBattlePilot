@@ -68,11 +68,27 @@
 	 * Alle Canvase der Raumschiffe werden ausserhalb des Sichtbereiches gelegt. Erst bei Bedarf werden sie an die richtige Stelle positioniert
      */
 	function verschiebeRaumschiffCanvas(){
-		for (var raumschiffNr = 1; raumschiffNr < 20; raumschiffNr++){
-			var canvasRaumschiff = document.getElementById("canvas_Raumschiff_"+raumschiffNr);
-			canvasRaumschiff.style.left=-9999;
-			canvasRaumschiff.style.top=-9999;		
-		}		
+		// Move all canvases with ids starting with 'canvas_Raumschiff_' out of the viewport.
+		// Use querySelectorAll when available; fallback to numeric ids for older browsers.
+		if (document.querySelectorAll){
+			var nodes = document.querySelectorAll('[id^="canvas_Raumschiff_"]');
+			for (var i = 0; i < nodes.length; i++){
+				var canvasRaumschiff = nodes[i];
+				if (!canvasRaumschiff || !canvasRaumschiff.style) continue;
+				canvasRaumschiff.style.position = 'absolute';
+				canvasRaumschiff.style.left = '-9999px';
+				canvasRaumschiff.style.top = '-9999px';
+			}
+		}
+		else{
+			for (var raumschiffNr = 1; raumschiffNr < 20; raumschiffNr++){
+				var canvasRaumschiff = document.getElementById("canvas_Raumschiff_"+raumschiffNr);
+				if (!canvasRaumschiff || !canvasRaumschiff.style) continue;
+				canvasRaumschiff.style.position = 'absolute';
+				canvasRaumschiff.style.left = '-9999px';
+				canvasRaumschiff.style.top = '-9999px';
+			}
+		}
 	}
 	function zeichneFremdraumschiffe(context_neu){
 			
